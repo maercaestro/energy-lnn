@@ -1,0 +1,29 @@
+# Energy-Based Liquid Neural Network (EBLNN) - Pilot Study
+# Python Dependencies
+
+# Core scientific computing
+numpy>=1.21.0
+pandas>=1.3.0
+scipy>=1.7.0
+
+# Machine Learning
+torch>=2.0.0
+scikit-learn>=1.0.0
+
+# Liquid Neural Networks
+ncps>=0.1.0
+
+# Experiment tracking
+wandb>=0.15.0
+
+# Visualization
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# Configuration
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# Jupyter (optional, for notebook work)
+jupyter>=1.0.0
+ipykernel>=6.0.0

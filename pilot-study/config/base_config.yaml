@@ -1,0 +1,52 @@
+# Base Configuration for EBLNN Experiments
+# This file defines the default hyperparameters and settings
+
+# Data Settings
+data:
+  num_sequences: 10000
+  sequence_length: 30
+  seed: 42
+  data_path: "data/synthetic_temperature_data.csv"
+  force_regenerate: false
+
+# Model Architecture
+model:
+  input_size: 5
+  hidden_size: 128
+  mixed_memory: true
+  batch_first: true
+
+# Training Hyperparameters
+training:
+  epochs: 200
+  batch_size: 64
+  learning_rate: 0.001
+  alpha: 1.0  # Weight for EBM loss
+  w_safety: 100.0  # Weight for safety in energy calculation
+  
+  # Early Stopping
+  early_stopping: true
+  patience: 15  # Number of epochs without improvement before stopping
+  min_delta: 0.0001  # Minimum change in validation loss to qualify as improvement
+  
+# Data Split
+split:
+  test_size: 0.2
+  val_size: 0.1
+  seed: 42
+
+# WandB Settings
+wandb:
+  project: "energy-based-lnn"
+  entity: null  # Set to your wandb username/team
+  tags: ["pilot-study", "furnace", "eblnn"]
+  notes: "Baseline experiment with default hyperparameters"
+
+# Paths
+paths:
+  results: "results"
+  models: "results/models"
+  plots: "results/plots"
+
+# Device
+device: "cuda"  # Will fallback to 'cpu' if CUDA not available

@@ -1,0 +1,28 @@
+# WandB Sweep Configuration for Hyperparameter Tuning
+# Sweeps across: alpha, hidden_size, w_safety, learning_rate
+
+program: experiments/run_single_experiment.py
+method: grid  # Options: grid, random, bayes
+metric:
+  name: test_rmse_energy
+  goal: minimize
+
+parameters:
+  # Alpha: Balance parameter between LNN and EBM loss
+  alpha:
+    values: [0.5, 1.0, 2.0, 5.0]
+  
+  # Hidden Size: Size of CfC hidden layer
+  hidden_size:
+    values: [64, 128, 256]
+  
+  # W_Safety: Weight for safety/CO in energy calculation
+  w_safety:
+    values: [50.0, 100.0, 200.0]
+  
+  # Learning Rate
+  learning_rate:
+    values: [0.0001, 0.0005, 0.001, 0.005]
+
+# Fixed parameters (not swept)
+# These are inherited from base_config.yaml
