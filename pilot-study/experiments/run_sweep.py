@@ -7,6 +7,7 @@ import os
 import sys
 import yaml
 import wandb
+import argparse
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -119,10 +120,17 @@ def run_sweep_agent():
     print("\n✅ Sweep experiment complete!")
 
 
-def create_and_run_sweep():
-    """Create a WandB sweep and run agents."""
+def create_and_run_sweep(sweep_config_path=None):
+    """Create a WandB sweep and run agents.
+    
+    Args:
+        sweep_config_path: Path to sweep configuration file (default: config/sweep_config.yaml)
+    """
+    # Default sweep config path
+    if sweep_config_path is None:
+        sweep_config_path = os.path.join(project_root, 'config/sweep_config.yaml')
+    
     # Load sweep configuration
-    sweep_config_path = os.path.join(project_root, 'config/sweep_config.yaml')
     with open(sweep_config_path, 'r') as f:
         sweep_config = yaml.safe_load(f)
     
@@ -146,20 +154,49 @@ def create_and_run_sweep():
     print(f"{'='*70}\n")
     print(f"Sweep configuration:")
     print(f"  Method: {sweep_config['method']}")
-    print(f"  Parameters to sweep:")
-    for param, values in sweep_config['parameters'].items():
-        print(f"    - {param}: {values.get('values', values)}")
-    print(f"{'='*70}\n")
     
-    # Calculate total experiments
-    alpha_count = len(sweep_config['parameters']['alpha']['values'])
-    hidden_count = len(sweep_config['parameters']['hidden_size']['values'])
-    safety_count = len(sweep_config['parameters']['w_safety']['values'])
-    lr_count = len(sweep_config['parameters']['learning_rate']['values'])
-    total_experiments = alpha_count * hidden_count * safety_count * lr_count
+    # Calculate total experiments based on sweep method
+    if sweep_config['method'] == 'grid':
+        # Grid search - calculate product of all parameter combinations
+        alpha_count = len(sweep_config['parameters']['alpha']['values'])
+        hidden_count = len(sweep_config['parameters']['hidden_size']['values'])
+        safety_count = len(sweep_config['parameters']['w_safety']['values'])
+        lr_count = len(sweep_config['parameters']['learning_rate']['values'])
+        total_experiments = alpha_count * hidden_count * safety_count * lr_count
+        
+        print(f"  Parameters to sweep:")
+        for param, values in sweep_config['parameters'].items():
+            print(f"    - {param}: {values.get('values', values)}")
+        print(f"{'='*70}\n")
+        print(f"Total experiments in grid sweep: {total_experiments}")
+        print(f"  (Alpha: {alpha_count} × Hidden: {hidden_count} × Safety: {safety_count} × LR: {lr_count})")
     
-    print(f"Total experiments in grid sweep: {total_experiments}")
-    print(f"  (Alpha: {alpha_count} × Hidden: {hidden_count} × Safety: {safety_count} × LR: {lr_count})")
+    elif sweep_config['method'] == 'random':
+        # Random search - limited by run_cap
+        run_cap = sweep_config.get('run_cap', 20)
+        print(f"  Run cap: {run_cap}")
+        print(f"  Parameters to sample:")
+        for param, values in sweep_config['parameters'].items():
+            print(f"    - {param}: {values.get('values', values)}")
+        
+        # Check for early termination
+        if 'early_terminate' in sweep_config:
+            print(f"  Early termination: {sweep_config['early_terminate']['type']}")
+            print(f"    - Min iterations: {sweep_config['early_terminate'].get('min_iter', 'N/A')}")
+            print(f"    - Eta: {sweep_config['early_terminate'].get('eta', 'N/A')}")
+        
+        print(f"{'='*70}\n")
+        print(f"Total experiments: {run_cap} random samples")
+    
+    else:
+        # Bayes or other methods
+        run_cap = sweep_config.get('run_cap', 'unlimited')
+        print(f"  Parameters to optimize:")
+        for param, values in sweep_config['parameters'].items():
+            print(f"    - {param}: {values.get('values', values)}")
+        print(f"{'='*70}\n")
+        print(f"Run cap: {run_cap}")
+    
     print(f"\nStarting sweep agents...\n")
     
     # Run sweep agent
@@ -173,9 +210,13 @@ def create_and_run_sweep():
 
 
 if __name__ == '__main__':
-    import argparse
-    
     parser = argparse.ArgumentParser(description='Run WandB hyperparameter sweep')
+    parser.add_argument(
+        '--config',
+        type=str,
+        default='config/sweep_config.yaml',
+        help='Path to sweep configuration file (relative to project root)'
+    )
     parser.add_argument(
         '--count',
         type=int,
@@ -185,11 +226,18 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
+    # Construct full path to sweep config
+    sweep_config_path = os.path.join(project_root, args.config)
+    
+    if not os.path.exists(sweep_config_path):
+        print(f"❌ Error: Sweep configuration file not found: {sweep_config_path}")
+        sys.exit(1)
+    
+    print(f"Using sweep configuration: {args.config}")
+    
     if args.count:
         print(f"Running {args.count} experiments from sweep...")
-        # If count is specified, we need to modify the agent call
-        # For now, just run the full sweep creation
-        create_and_run_sweep()
     else:
         print("Running full hyperparameter sweep...")
-        create_and_run_sweep()
+    
+    create_and_run_sweep(sweep_config_path)
