@@ -39,7 +39,10 @@ pilot-study/
 │   └── synthetic_temperature_data.csv  # Generated data (created on first run)
 ├── experiments/
 │   ├── run_single_experiment.py  # Single experiment runner
-│   └── run_sweep.py              # Hyperparameter sweep runner
+│   ├── run_sweep.py              # Hyperparameter sweep runner
+│   ├── analyze_causality.py      # Causality analysis system
+│   ├── CAUSALITY_ANALYSIS_README.md
+│   └── CAUSALITY_ANALYSIS_QUICK_REFERENCE.md
 ├── notebook/
 │   └── energy_lnn_pilot.ipynb    # Original pilot notebook
 ├── src/
@@ -114,6 +117,22 @@ python experiments/run_sweep.py
 # Total: 4 × 3 × 3 × 4 = 144 experiments
 ```
 
+### 5. Run Causality Analysis
+
+```bash
+# Analyze trained model to understand causal relationships
+python experiments/analyze_causality.py --model results/models/best_model.pth
+
+# This runs three complementary analyses:
+# 1. Neural Saliency: Which features drive energy cost
+# 2. Temporal Sensitivity: How system responds to changes
+# 3. Internal Gating: What's happening inside the CfC layer
+
+# For detailed documentation, see:
+# - experiments/CAUSALITY_ANALYSIS_README.md (full guide)
+# - experiments/CAUSALITY_ANALYSIS_QUICK_REFERENCE.md (quick start)
+```
+
 ---
 
 ## ⚙️ Configuration
@@ -160,6 +179,11 @@ All experiments are logged to Weights & Biases with:
 - **Models:** Saved to `results/models/best_model.pth`
 - **Plots:** Generated plots in `results/plots/`
 - **Data:** Synthetic data in `data/synthetic_temperature_data.csv`
+- **Causality Analysis:** Results in `results/causality_analysis/`
+  - `analysis_1_neural_saliency.png` - Feature importance heatmap
+  - `analysis_2_temporal_sensitivity.png` - Time-lag response
+  - `analysis_3_internal_gating.png` - Hidden state dynamics
+  - `analysis_summary.json` - Numerical results
 
 ---
 
