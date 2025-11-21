@@ -144,15 +144,44 @@ def run_best_config_with_analysis():
     print("\n🎓 Starting training...")
     print("=" * 80)
     
-    trainer.train(
-        train_loader,
-        val_loader,
-        save_path=config['paths']['models']
-    )
+    try:
+        trainer.train(
+            train_loader,
+            val_loader,
+            save_path=config['paths']['models']
+        )
+    except Exception as e:
+        print(f"\n❌ Training failed: {e}")
+        import traceback
+        traceback.print_exc()
+        wandb.finish(exit_code=1)
+        raise
     
     print("\n" + "=" * 80)
     print("✅ Training complete!")
     print("=" * 80)
+    
+    # Verify models were saved
+    best_model_path = os.path.join(config['paths']['models'], 'eblnn_best_model.pth')
+    last_model_path = os.path.join(config['paths']['models'], 'eblnn_last_model.pth')
+    
+    print("\n🔍 Checking saved models:")
+    if os.path.exists(best_model_path):
+        print(f"   ✅ Best model: {best_model_path}")
+    else:
+        print(f"   ❌ Best model not found: {best_model_path}")
+    
+    if os.path.exists(last_model_path):
+        print(f"   ✅ Last model: {last_model_path}")
+    else:
+        print(f"   ❌ Last model not found: {last_model_path}")
+    
+    if not os.path.exists(best_model_path) and not os.path.exists(last_model_path):
+        print("\n❌ ERROR: No models were saved during training!")
+        print("   This likely means training failed silently.")
+        print("   Check the trainer code for issues.")
+        wandb.finish(exit_code=1)
+        return None
     
     # Evaluate on test set
     print("\n📊 Evaluating on test set...")
@@ -184,18 +213,31 @@ def run_best_config_with_analysis():
     
     # Path to best model
     best_model_path = os.path.join(config['paths']['models'], 'eblnn_best_model.pth')
+    last_model_path = os.path.join(config['paths']['models'], 'eblnn_last_model.pth')
     
-    if not os.path.exists(best_model_path):
-        print(f"⚠️  Warning: Best model not found at {best_model_path}")
-        print("   Using last model instead...")
-        best_model_path = os.path.join(config['paths']['models'], 'eblnn_last_model.pth')
+    # Verify model exists
+    if not os.path.exists(best_model_path) and not os.path.exists(last_model_path):
+        print(f"\n❌ Error: No model found!")
+        print(f"   Expected at: {best_model_path}")
+        print(f"   Or at: {last_model_path}")
+        print("\n⚠️  Training may have failed to save model. Check logs above.")
+        wandb.finish(exit_code=1)
+        return None
     
-    print(f"\n📂 Using model: {best_model_path}")
+    # Prefer best model, fallback to last
+    if os.path.exists(best_model_path):
+        model_to_analyze = best_model_path
+        print(f"\n✅ Found best model: {best_model_path}")
+    else:
+        model_to_analyze = last_model_path
+        print(f"\n⚠️  Best model not found, using last model: {last_model_path}")
+    
+    print(f"📂 Analyzing model: {model_to_analyze}")
     
     # Create causality analyzer
     print("\n🔧 Initializing CausalityAnalyzer...")
     analyzer = CausalityAnalyzer(
-        model_path=best_model_path,
+        model_path=model_to_analyze,
         data_path=config['data']['data_path'],
         device=str(device),
         output_dir=os.path.join(config['paths']['results'], 'causality_analysis')
