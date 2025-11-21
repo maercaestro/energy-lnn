@@ -101,9 +101,10 @@ def run_best_config_with_analysis():
     # Load or generate data
     print("\n📊 Loading data...")
     data = load_or_generate_data(
+        data_path=config['data']['data_path'],
         num_sequences=config['data']['num_sequences'],
         sequence_length=config['data']['sequence_length'],
-        save_path=config['data']['data_path'],
+        seed=config['data']['seed'],
         force_regenerate=config['data']['force_regenerate']
     )
     print(f"✅ Data loaded: {len(data)} samples")
