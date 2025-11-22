@@ -330,8 +330,10 @@ def run_best_config_with_analysis():
     
     # Log metrics
     wandb.log({
-        'causality/gating/avg_activation_magnitude': gating_results['avg_activation_magnitude'],
-        'causality/gating/avg_velocity': gating_results['avg_velocity'],
+        'causality/gating/mean_activation_magnitude': gating_results['mean_activation_magnitude'],
+        'causality/gating/max_activation_magnitude': gating_results['max_activation_magnitude'],
+        'causality/gating/mean_velocity': gating_results['mean_velocity'],
+        'causality/gating/max_velocity': gating_results['max_velocity'],
         'causality/gating/dynamics_type': gating_results['dynamics_type']
     })
     
