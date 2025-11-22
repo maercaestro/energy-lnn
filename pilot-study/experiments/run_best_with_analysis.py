@@ -22,11 +22,26 @@ import json
 import yaml
 import torch
 import wandb
+import numpy as np
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+def convert_to_json_serializable(obj):
+    """Convert numpy types to Python native types for JSON serialization."""
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_to_json_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_to_json_serializable(item) for item in obj]
+    return obj
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -357,7 +372,7 @@ def run_best_config_with_analysis():
                 'epochs_trained': len(trainer.history['train_loss']),
                 'best_epoch': trainer.best_epoch
             },
-            'final_metrics': test_metrics
+            'final_metrics': convert_to_json_serializable(test_metrics)
         },
         'causality': {
             'saliency': {
