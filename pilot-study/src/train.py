@@ -338,6 +338,11 @@ class EBLNNTrainer:
                     wandb.run.summary['stopped_at_epoch'] = epoch + 1
                 break
         
+        # Save last model at end of training
+        last_model_path = os.path.join(save_path, 'last_model.pth')
+        torch.save(self.model.state_dict(), last_model_path)
+        print(f"\n💾 Last model saved to: {last_model_path}")
+        
         print(f"\nTraining complete!")
         print(f"Best validation loss: {self.best_val_loss:.4f} at epoch {self.best_epoch}")
         if self.early_stopping and self.epochs_without_improvement < self.patience:

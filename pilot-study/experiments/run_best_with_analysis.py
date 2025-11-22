@@ -211,9 +211,9 @@ def run_best_config_with_analysis():
     print("🔍 STEP 2: Causality Analysis")
     print("=" * 80)
     
-    # Path to best model
-    best_model_path = os.path.join(config['paths']['models'], 'eblnn_best_model.pth')
-    last_model_path = os.path.join(config['paths']['models'], 'eblnn_last_model.pth')
+    # Path to best model (matches what trainer saves)
+    best_model_path = os.path.join(config['paths']['models'], 'best_model.pth')
+    last_model_path = os.path.join(config['paths']['models'], 'last_model.pth')
     
     # Verify model exists
     if not os.path.exists(best_model_path) and not os.path.exists(last_model_path):
@@ -391,7 +391,7 @@ def run_best_config_with_analysis():
                 'dynamics_type': gating_results['dynamics_type']
             }
         },
-        'model_path': best_model_path,
+        'model_path': model_to_analyze,
         'wandb_run_url': run.url
     }
     
@@ -431,7 +431,7 @@ def run_best_config_with_analysis():
     print(f"   System dynamics: {gating_results['dynamics_type']}")
     
     print(f"\n📁 All results saved to:")
-    print(f"   Model: {best_model_path}")
+    print(f"   Model: {model_to_analyze}")
     print(f"   Analysis: {analyzer.output_dir}")
     print(f"   WandB: {run.url}")
     
