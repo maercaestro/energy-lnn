@@ -251,12 +251,14 @@ def run_best_config_with_analysis():
     saliency_results = analyzer.analysis_1_neural_saliency()
     
     # Log to WandB
-    wandb.log({
-        'causality/saliency_heatmap': wandb.Image(
-            os.path.join(analyzer.output_dir, 'saliency_heatmap.png'),
-            caption='Neural Saliency: Which features drive energy cost'
-        )
-    })
+    saliency_plot_path = os.path.join(analyzer.output_dir, 'analysis_1_neural_saliency.png')
+    if os.path.exists(saliency_plot_path):
+        wandb.log({
+            'causality/saliency_heatmap': wandb.Image(
+                saliency_plot_path,
+                caption='Neural Saliency: Which features drive energy cost'
+            )
+        })
     
     # Log feature importance as bar chart
     feature_importance_dict = dict(zip(
@@ -319,12 +321,14 @@ def run_best_config_with_analysis():
     gating_results = analyzer.analysis_3_internal_gating()
     
     # Log to WandB
-    wandb.log({
-        'causality/internal_gating': wandb.Image(
-            os.path.join(analyzer.output_dir, 'internal_gating.png'),
-            caption='Internal Gating: CfC hidden state dynamics'
-        )
-    })
+    gating_plot_path = os.path.join(analyzer.output_dir, 'analysis_3_internal_gating.png')
+    if os.path.exists(gating_plot_path):
+        wandb.log({
+            'causality/internal_gating': wandb.Image(
+                gating_plot_path,
+                caption='Internal Gating: CfC hidden state dynamics'
+            )
+        })
     
     # Log metrics
     wandb.log({
