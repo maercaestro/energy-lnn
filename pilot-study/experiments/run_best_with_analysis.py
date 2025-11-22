@@ -354,7 +354,8 @@ def run_best_config_with_analysis():
                 'hidden_size': config['model']['hidden_size'],
                 'w_safety': config['training']['w_safety'],
                 'learning_rate': config['training']['learning_rate'],
-                'epochs_trained': trainer.history['epoch'][-1]
+                'epochs_trained': len(trainer.history['train_loss']),
+                'best_epoch': trainer.best_epoch
             },
             'final_metrics': test_metrics
         },
@@ -371,8 +372,10 @@ def run_best_config_with_analysis():
                 'system_behavior': temporal_results.get('system_behavior', 'UNKNOWN')
             },
             'gating': {
-                'avg_activation_magnitude': float(gating_results['avg_activation_magnitude']),
-                'avg_velocity': float(gating_results['avg_velocity']),
+                'mean_activation_magnitude': float(gating_results['mean_activation_magnitude']),
+                'max_activation_magnitude': float(gating_results['max_activation_magnitude']),
+                'mean_velocity': float(gating_results['mean_velocity']),
+                'max_velocity': float(gating_results['max_velocity']),
                 'dynamics_type': gating_results['dynamics_type']
             }
         },
