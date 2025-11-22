@@ -248,10 +248,7 @@ def run_best_config_with_analysis():
     print("🔍 Analysis 1: Neural Saliency (Gradient-Based Causality)")
     print("-" * 80)
     
-    saliency_results = analyzer.analysis_1_neural_saliency(
-        num_samples=32,
-        save_path=os.path.join(analyzer.output_dir, 'saliency_heatmap.png')
-    )
+    saliency_results = analyzer.analysis_1_neural_saliency()
     
     # Log to WandB
     wandb.log({
@@ -287,54 +284,39 @@ def run_best_config_with_analysis():
     print("🔍 Analysis 2: Temporal Sensitivity (Time-Lag Analysis)")
     print("-" * 80)
     
-    # Test multiple features
-    features_to_test = ['fuel_flow', 'air_fuel_ratio', 'inflow_rate']
-    temporal_results = {}
+    temporal_results = analyzer.analysis_2_temporal_sensitivity(
+        perturbation_magnitude=0.1
+    )
     
-    for feature in features_to_test:
-        print(f"\n   Testing: {feature}")
-        
-        result = analyzer.analysis_2_temporal_sensitivity(
-            perturbation_feature=feature,
-            perturbation_magnitude=0.1,
-            perturbation_timestep=0,
-            save_path=os.path.join(analyzer.output_dir, f'temporal_{feature}.png')
-        )
-        
-        temporal_results[feature] = result
-        
-        # Log to WandB
+    # Note: Currently only tests fuel_flow feature
+    # Log to WandB (files are saved automatically by analyzer)
+    temporal_plot_path = os.path.join(analyzer.output_dir, 'analysis_2_temporal_sensitivity.png')
+    if os.path.exists(temporal_plot_path):
         wandb.log({
-            f'causality/temporal_{feature}': wandb.Image(
-                os.path.join(analyzer.output_dir, f'temporal_{feature}.png'),
-                caption=f'Temporal Sensitivity: {feature} perturbation'
+            'causality/temporal_sensitivity': wandb.Image(
+                temporal_plot_path,
+                caption='Temporal Sensitivity: fuel_flow perturbation'
             )
         })
-        
-        # Log metrics
-        max_impact = abs(result['energy_difference']).max()
-        cumulative_impact = abs(result['energy_difference']).sum()
-        
-        wandb.log({
-            f'causality/temporal/{feature}/max_impact': max_impact,
-            f'causality/temporal/{feature}/cumulative_impact': cumulative_impact,
-            f'causality/temporal/{feature}/system_behavior': result['system_behavior']
-        })
-        
-        print(f"      Max impact: {max_impact:.6f}")
-        print(f"      Behavior: {result['system_behavior']}")
     
-    print(f"\n✅ Temporal Sensitivity complete and logged to WandB")
+    # Log metrics
+    max_impact = temporal_results.get('max_difference', 0)
+    peak_timestep = temporal_results.get('max_difference_timestep', 0)
+    
+    wandb.log({
+        'causality/temporal/max_impact': max_impact,
+        'causality/temporal/peak_timestep': peak_timestep,
+        'causality/temporal/system_behavior': temporal_results.get('system_behavior', 'UNKNOWN')
+    })
+    
+    print(f"✅ Temporal Sensitivity complete and logged to WandB")
     
     # --- Analysis 3: Internal Gating ---
     print("\n" + "-" * 80)
     print("🔍 Analysis 3: Internal Gating Analysis (CfC Interpretability)")
     print("-" * 80)
     
-    gating_results = analyzer.analysis_3_internal_gating(
-        num_samples=8,
-        save_path=os.path.join(analyzer.output_dir, 'internal_gating.png')
-    )
+    gating_results = analyzer.analysis_3_internal_gating()
     
     # Log to WandB
     wandb.log({
@@ -378,12 +360,11 @@ def run_best_config_with_analysis():
                 'most_important_feature': max(feature_importance_dict.items(), key=lambda x: x[1])[0]
             },
             'temporal': {
-                feature: {
-                    'max_impact': float(abs(result['energy_difference']).max()),
-                    'cumulative_impact': float(abs(result['energy_difference']).sum()),
-                    'system_behavior': result['system_behavior']
-                }
-                for feature, result in temporal_results.items()
+                'perturbation_feature': 'fuel_flow',
+                'perturbation_magnitude': 0.1,
+                'max_impact': float(max_impact),
+                'peak_timestep': int(peak_timestep),
+                'system_behavior': temporal_results.get('system_behavior', 'UNKNOWN')
             },
             'gating': {
                 'avg_activation_magnitude': float(gating_results['avg_activation_magnitude']),
