@@ -103,24 +103,24 @@ class CausalityAnalyzer:
         # Load checkpoint
         checkpoint = torch.load(self.model_path, map_location=self.device)
         
-        # Infer hidden size from state dict
-        # The CfC body has a weight matrix we can use to infer hidden_size
-        hidden_size = None
-        for key, tensor in checkpoint.items():
-            if 'cfc_body' in key and 'weight' in key:
-                # Find the hidden dimension
-                if len(tensor.shape) >= 2:
-                    hidden_size = tensor.shape[0]
-                    break
-        
-        if hidden_size is None:
-            # Default fallback
-            hidden_size = 128
-            print(f"  Warning: Could not infer hidden_size, using default {hidden_size}")
+        # Check if checkpoint is a dict with 'model_state_dict' or raw state_dict
+        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+            state_dict = checkpoint['model_state_dict']
+            # Try to get config if available
+            if 'config' in checkpoint:
+                hidden_size = checkpoint['config'].get('model', {}).get('hidden_size', 128)
+                print(f"  Hidden size from config: {hidden_size}")
+            else:
+                # Infer from state_dict
+                hidden_size = self._infer_hidden_size(state_dict)
         else:
-            print(f"  Inferred hidden_size: {hidden_size}")
+            # Assume checkpoint is the state_dict directly
+            state_dict = checkpoint
+            hidden_size = self._infer_hidden_size(state_dict)
         
-        # Create model
+        print(f"  Using hidden_size: {hidden_size}")
+        
+        # Create model with correct architecture
         model = EBLNN(
             input_size=len(self.input_features),
             hidden_size=hidden_size,
@@ -129,7 +129,7 @@ class CausalityAnalyzer:
         )
         
         # Load state dict
-        model.load_state_dict(checkpoint)
+        model.load_state_dict(state_dict)
         model = model.to(self.device)
         model.eval()
         
@@ -137,6 +137,33 @@ class CausalityAnalyzer:
         print(f"  Model loaded: {num_params:,} parameters")
         
         return model
+    
+    def _infer_hidden_size(self, state_dict: dict) -> int:
+        """
+        Infer hidden size from state dict by looking at predict_head weights.
+        
+        Args:
+            state_dict: Model state dictionary
+            
+        Returns:
+            Inferred hidden size
+        """
+        # The predict_head has shape [output_size, hidden_size]
+        # So predict_head.weight will be [2, hidden_size]
+        if 'predict_head.weight' in state_dict:
+            hidden_size = state_dict['predict_head.weight'].shape[1]
+            print(f"  Inferred hidden_size from predict_head: {hidden_size}")
+            return hidden_size
+        
+        # Fallback: check energy_head
+        if 'energy_head.weight' in state_dict:
+            hidden_size = state_dict['energy_head.weight'].shape[1]
+            print(f"  Inferred hidden_size from energy_head: {hidden_size}")
+            return hidden_size
+        
+        # Last resort: default
+        print("  Warning: Could not infer hidden_size, using default 128")
+        return 128
     
     def _load_data(self) -> pd.DataFrame:
         """
