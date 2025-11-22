@@ -426,8 +426,8 @@ def run_best_config_with_analysis():
     
     print("\n📊 Key Results:")
     print(f"\n   Test RMSE (Energy): {test_metrics['test_rmse_energy']:.6f}")
-    print(f"   Test RMSE (Temperature): {test_metrics['test_rmse_temperature']:.6f}")
-    print(f"   Test RMSE (O2): {test_metrics['test_rmse_excess_o2']:.6f}")
+    print(f"   Test RMSE (Temperature): {test_metrics['test_rmse_temp']:.6f}")
+    print(f"   Test RMSE (O2): {test_metrics['test_rmse_o2']:.6f}")
     
     print(f"\n🔍 Causality Insights:")
     print(f"   Most important feature: {summary['causality']['saliency']['most_important_feature']}")
