@@ -261,10 +261,8 @@ def run_best_config_with_analysis():
         })
     
     # Log feature importance as bar chart
-    feature_importance_dict = dict(zip(
-        analyzer.input_features,
-        saliency_results['feature_importance'].tolist()
-    ))
+    # feature_importance is already a dict from the analyzer
+    feature_importance_dict = saliency_results['feature_importance']
     wandb.log({'causality/feature_importance': wandb.plot.bar(
         wandb.Table(
             data=[[k, v] for k, v in feature_importance_dict.items()],
