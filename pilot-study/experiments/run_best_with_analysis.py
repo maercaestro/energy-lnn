@@ -161,9 +161,9 @@ def run_best_config_with_analysis():
     print("✅ Training complete!")
     print("=" * 80)
     
-    # Verify models were saved
-    best_model_path = os.path.join(config['paths']['models'], 'eblnn_best_model.pth')
-    last_model_path = os.path.join(config['paths']['models'], 'eblnn_last_model.pth')
+    # Verify models were saved (use correct filenames from trainer)
+    best_model_path = os.path.join(config['paths']['models'], 'best_model.pth')
+    last_model_path = os.path.join(config['paths']['models'], 'last_model.pth')
     
     print("\n🔍 Checking saved models:")
     if os.path.exists(best_model_path):
