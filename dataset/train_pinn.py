@@ -384,13 +384,17 @@ def train(args):
             
             # Save best model
             best_model_path = os.path.join(config.checkpoint_dir, 'best_pinn_model.pth')
+            
+            # Create config dict without WandB objects
+            config_dict = {k: v for k, v in vars(config).items() if not k.startswith('_')}
+            
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'val_loss': val_loss,
                 'val_metrics': val_metrics,
-                'config': vars(config)
+                'config': config_dict
             }, best_model_path)
             
             logger.info(f"✅ Best model saved! Val MSE: {val_loss:.6f}")
@@ -451,12 +455,14 @@ def train(args):
         'test_' + k: v for k, v in test_metrics.items()
     })
     
-    # Save final summary
+    # Save final summary (exclude WandB objects)
+    config_dict = {k: v for k, v in vars(config).items() if not k.startswith('_')}
+    
     summary = {
         'best_epoch': best_checkpoint['epoch'],
         'best_val_metrics': best_checkpoint['val_metrics'],
         'test_metrics': test_metrics,
-        'config': vars(config)
+        'config': config_dict
     }
     
     summary_path = os.path.join(config.checkpoint_dir, 'training_summary.json')
