@@ -11,7 +11,7 @@ parameters:
   
   # Training config (fixed)
   epochs:
-    value: 500
+    value: 10000
   patience:
     value: 50
   use_cuda:
