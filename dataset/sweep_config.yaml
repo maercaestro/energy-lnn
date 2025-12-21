@@ -7,7 +7,7 @@ metric:
 parameters:
   # Data path (fixed)
   data_path:
-    value: furnace_data_cleaned.csv
+    value: final_data.csv
   
   # Training config (fixed)
   epochs:
@@ -15,7 +15,7 @@ parameters:
   patience:
     value: 50
   use_cuda:
-    value: true
+    value: false
   
   # Model Architecture
   hidden_dim:
