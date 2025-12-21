@@ -285,7 +285,7 @@ def train(args):
     
     # Learning rate scheduler
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.5, patience=config.scheduler_patience, verbose=True
+        optimizer, mode='min', factor=0.5, patience=config.scheduler_patience
     )
     
     # Early stopping
