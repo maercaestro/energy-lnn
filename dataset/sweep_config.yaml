@@ -5,6 +5,18 @@ metric:
   goal: minimize
 
 parameters:
+  # Data path (fixed)
+  data_path:
+    value: furnace_data_cleaned.csv
+  
+  # Training config (fixed)
+  epochs:
+    value: 500
+  patience:
+    value: 50
+  use_cuda:
+    value: true
+  
   # Model Architecture
   hidden_dim:
     values: [32, 64, 128, 256]
@@ -43,17 +55,3 @@ early_terminate:
   min_iter: 50
   eta: 2
   s: 3
-
-# Fixed parameters
-command:
-  - ${env}
-  - python
-  - ${program}
-  - --data_path
-  - furnace_data_cleaned.csv
-  - --epochs
-  - "500"
-  - --patience
-  - "50"
-  - --use_cuda
-  - ${args}
