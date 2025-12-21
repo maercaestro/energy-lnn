@@ -1,0 +1,62 @@
+graph TD
+    %% --- SUBGRAPH: THE SEARCH SPACE (MCMC) ---
+    subgraph Search_Space ["Generative Search Space (MCMC / Langevin Dynamics)"]
+        direction TB
+        A[Random Noise / Initial State S_0] --> B[Langevin Sampling Loop]
+        B -->|Gradient Descent on Energy| C{Energy Landscape E_theta}
+        C -->|Find Minima| D[Generated 'Fantasy' States S_fake]
+        
+        style Search_Space fill:#eef2ff,stroke:#4f46e5,stroke-width:2px
+    end
+
+    %% --- SUBGRAPH: THE HYBRID MODEL ---
+    subgraph EBLNN_Model ["Energy-Based Liquid Neural Network (EBLNN)"]
+        direction LR
+        
+        %% Inputs
+        Input((State S_t, Action A_t)) --> Body
+        
+        %% The Body (CfC)
+        Body["Liquid Neural Network Body
+        (Closed-form Continuous / CfC)"]
+        
+        %% Head 1: The Physics (Generator)
+        Body -->|Hidden State h_t| Head_Phys["Physics Head
+        (Predict S_t+1)"]
+        
+        %% Head 2: The Energy (Critic)
+        Body -->|Hidden State h_t| Head_EBM["EBM Head
+        (Predict Energy E)"]
+        
+        style EBLNN_Model fill:#f0fdf4,stroke:#16a34a,stroke-width:2px
+        style Body fill:#ffffff,stroke:#333,stroke-width:2px
+    end
+
+    %% --- SUBGRAPH: TRAINING LOOPS ---
+    subgraph Training ["Joint Generative Training"]
+        direction TB
+        
+        %% Loop 1: Physics Loss
+        Head_Phys -->|Compare vs Ground Truth| Loss_Phys["Physics Loss
+        (MSE)"]
+        
+        %% Loop 2: Energy Discovery (Contrastive Divergence)
+        D -.->|Negative Sample| Loss_EBM
+        Input -.->|Positive Sample| Loss_EBM
+        Head_EBM -->|Energy Score| Loss_EBM["Contrastive Loss
+        (CD)"]
+        
+        %% Feedback
+        Loss_Phys -->|Update| Body
+        Loss_EBM -->|Update| Body
+        
+        style Training fill:#fff7ed,stroke:#ea580c,stroke-width:2px
+    end
+
+    %% Connections between Subgraphs
+    Input --> B
+    Head_EBM -.->|Defines Topology for| C
+
+    %% Final Output
+    Head_Phys --> Out1[Predicted Next State]
+    Head_EBM --> Out2[Learned Control Policy]

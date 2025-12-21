@@ -1,0 +1,59 @@
+program: train_pinn.py
+method: bayes
+metric:
+  name: val/mse_total
+  goal: minimize
+
+parameters:
+  # Model Architecture
+  hidden_dim:
+    values: [32, 64, 128, 256]
+  layers:
+    values: [3, 4, 5, 6]
+  
+  # Optimization
+  lr:
+    distribution: log_uniform_values
+    min: 0.0001
+    max: 0.01
+  weight_decay:
+    distribution: log_uniform_values
+    min: 1e-6
+    max: 1e-3
+  batch_size:
+    values: [32, 64, 128]
+  
+  # Physics Weights (Critical for PINN)
+  w_energy:
+    distribution: uniform
+    min: 0.01
+    max: 1.0
+  w_mass:
+    distribution: uniform
+    min: 0.01
+    max: 1.0
+  
+  # Regularization
+  grad_clip:
+    values: [0.5, 1.0, 2.0]
+
+# Early termination
+early_terminate:
+  type: hyperband
+  min_iter: 50
+  eta: 2
+  s: 3
+
+# Fixed parameters
+command:
+  - ${env}
+  - python
+  - ${program}
+  - --data_path
+  - furnace_data_cleaned.csv
+  - --epochs
+  - "500"
+  - --patience
+  - "50"
+  - --use_cuda
+  - ${args}
