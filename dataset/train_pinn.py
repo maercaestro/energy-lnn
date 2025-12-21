@@ -536,7 +536,7 @@ if __name__ == "__main__":
                         help='WandB entity (username or team)')
     
     # Device
-    parser.add_argument('--use_cuda', action='store_true',
+    parser.add_argument('--use_cuda', type=lambda x: str(x).lower() == 'true', default=False,
                         help='Use CUDA if available')
     
     args = parser.parse_args()
