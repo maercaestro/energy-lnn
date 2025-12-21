@@ -421,7 +421,7 @@ def train(args):
     logger.info("=" * 80)
     
     # Load best model
-    best_checkpoint = torch.load(best_model_path)
+    best_checkpoint = torch.load(best_model_path, weights_only=False)
     model.load_state_dict(best_checkpoint['model_state_dict'])
     
     test_metrics = calculate_metrics(model, X_test_s, X_test_p, y_test, device)
