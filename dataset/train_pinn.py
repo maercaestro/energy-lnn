@@ -198,7 +198,12 @@ def train(args):
         name=f"pinn_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
     )
     config = wandb.config
+    
+    # Create unique checkpoint directory for this run to avoid architecture conflicts
+    run_checkpoint_dir = os.path.join(config.checkpoint_dir, f"run_{run.id}")
+    os.makedirs(run_checkpoint_dir, exist_ok=True)
     logger.info(f"WandB Run: {run.url}")
+    logger.info(f"Checkpoints will be saved to: {run_checkpoint_dir}")
 
     # --- Data Loading ---
     logger.info(f"Loading data from: {config.data_path}")
@@ -382,8 +387,8 @@ def train(args):
             best_val_loss = val_loss
             patience_counter = 0
             
-            # Save best model
-            best_model_path = os.path.join(config.checkpoint_dir, 'best_pinn_model.pth')
+            # Save best model (unique per run)
+            best_model_path = os.path.join(run_checkpoint_dir, 'best_pinn_model.pth')
             
             # Create config dict without WandB objects
             config_dict = {k: v for k, v in vars(config).items() if not k.startswith('_')}
@@ -411,7 +416,7 @@ def train(args):
         
         # Periodic checkpoint
         if (epoch + 1) % config.checkpoint_interval == 0:
-            checkpoint_path = os.path.join(config.checkpoint_dir, f'checkpoint_epoch_{epoch+1}.pth')
+            checkpoint_path = os.path.join(run_checkpoint_dir, f'checkpoint_epoch_{epoch+1}.pth')
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
@@ -426,7 +431,12 @@ def train(args):
     
     # Load best model
     best_checkpoint = torch.load(best_model_path, weights_only=False)
-    model.load_state_dict(best_checkpoint['model_state_dict'])
+    try:
+        model.load_state_dict(best_checkpoint['model_state_dict'], strict=True)
+    except RuntimeError as e:
+        logger.warning(f"Failed to load checkpoint due to architecture mismatch: {e}")
+        logger.warning("Using current model state for evaluation (this may happen with different sweep hyperparameters)")
+        # Model already has the latest trained weights, so we can proceed
     
     test_metrics = calculate_metrics(model, X_test_s, X_test_p, y_test, device)
     
