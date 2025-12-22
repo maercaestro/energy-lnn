@@ -1,6 +1,5 @@
 program: train_pinn.py
 method: bayes
-count: 30
 metric:
   name: val/mse_total
   goal: minimize
