@@ -1,57 +1,54 @@
 program: train_pinn.py
 method: bayes
+count: 30
 metric:
   name: val/mse_total
   goal: minimize
 
 parameters:
-  # Data path (fixed)
+  # Data path
   data_path:
     value: final_data.csv
   
-  # Training config (fixed)
+  # Training config
   epochs:
-    value: 10000
+    value: 5000  # 10k is overkill if patience works
   patience:
-    value: 50
+    value: 200   # Give it time to overcome physics conflicts
   use_cuda:
     value: false
   
   # Model Architecture
   hidden_dim:
-    values: [32, 64, 128, 256]
+    values: [64, 128, 256] # Dropped 32 (too small for physics)
   layers:
-    values: [3, 4, 5, 6]
+    values: [4, 5, 6]      # Deep networks handle physics better
   
   # Optimization
   lr:
     distribution: log_uniform_values
-    min: 0.0001
-    max: 0.01
-  weight_decay:
-    distribution: log_uniform_values
-    min: 1e-6
-    max: 1e-3
+    min: 0.0005
+    max: 0.005
   batch_size:
-    values: [32, 64, 128]
+    values: [64, 128] # Larger batches stabilize physics gradients
   
-  # Physics Weights (Critical for PINN)
+  # Physics Weights (THE FIX)
   w_energy:
     distribution: uniform
-    min: 0.01
-    max: 1.0
+    min: 0.1
+    max: 2.0
   w_mass:
     distribution: uniform
-    min: 0.01
-    max: 1.0
+    min: 5.0    # Start high
+    max: 50.0   # Go massive to force O2 learning
   
   # Regularization
   grad_clip:
-    values: [0.5, 1.0, 2.0]
+    value: 1.0 # Fixed value is usually fine, saves search space
 
-# Early termination
+# Early termination (Relaxed for PINNs)
 early_terminate:
   type: hyperband
-  min_iter: 50
+  min_iter: 200 # Don't kill before epoch 200
   eta: 2
   s: 3
