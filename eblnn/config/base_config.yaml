@@ -1,0 +1,63 @@
+# Base Configuration — Generative EB-LNN
+# ========================================
+# Key upgrade over pilot-study: EBM head trained via Contrastive Divergence
+# with Langevin-generated fantasy states. No hardcoded energy formula.
+
+# ── Data ──────────────────────────────────────────────────────────────────
+data:
+  data_path: "data/synthetic_temperature_data.csv"
+  num_sequences: 10000
+  seq_len: 30
+  batch_size: 64
+  test_size: 0.2
+  val_size: 0.1
+  seed: 42
+  force_regenerate: false
+
+# ── Model ─────────────────────────────────────────────────────────────────
+model:
+  input_size: 5
+  hidden_size: 128
+  phys_output_size: 2           # [next_temp, next_excess_o2]
+  ebm_hidden_dims: [128, 64]    # MLP layers in EBM head
+  mixed_memory: true
+  batch_first: true
+
+# ── Training ──────────────────────────────────────────────────────────────
+training:
+  epochs: 200
+  learning_rate: 0.001
+  alpha: 1.0          # Weight balancing L_physics vs L_CD
+  l2_reg: 0.01        # Energy-magnitude regularisation inside L_CD
+  margin: 0.0         # Hinge margin (0 = standard CD)
+  early_stopping: true
+  patience: 20
+  min_delta: 0.0001
+
+# ── Langevin Sampler ──────────────────────────────────────────────────────
+sampler:
+  n_steps: 20         # MCMC steps per training call
+  step_size: 0.01     # Gradient step size
+  noise_scale: 0.005  # Gaussian noise per step
+  clip_x: 3.0         # Hard-clip |x| (normalised space ~ ±3σ is safe)
+
+# ── Replay Buffer ─────────────────────────────────────────────────────────
+buffer:
+  capacity: 10000     # Number of stored fantasy sequences
+  buffer_prob: 0.95   # P(draw from buffer); 1-P = fresh noise
+
+# ── Device ────────────────────────────────────────────────────────────────
+device: "cuda"        # Falls back to 'cpu' if CUDA unavailable
+
+# ── W&B ───────────────────────────────────────────────────────────────────
+wandb:
+  project: "energy-based-lnn"
+  entity: null
+  tags: ["generative", "eblnn", "contrastive-divergence", "langevin"]
+  notes: "Generative EB-LNN with Langevin sampling and Contrastive Divergence"
+
+# ── Paths ─────────────────────────────────────────────────────────────────
+paths:
+  results: "results"
+  models: "results/models"
+  plots: "results/plots"
