@@ -171,7 +171,9 @@ def physics_loss_v2(
     lam = torch.clamp(lam, min=1.01, max=5.0)                      # physical range
     O2_calc = 21.0 * (lam - 1.0) / lam
 
-    res_mass = torch.mean((pred_O2 - O2_calc) ** 2) / (var_O2 + 1e-8)
+    # Normalise by mean(O2_calc²) — same self-scaling approach as energy
+    o2_scale = (O2_calc.detach() ** 2).mean().clamp(min=1e-6)
+    res_mass = torch.mean((pred_O2 - O2_calc) ** 2) / o2_scale
 
     total = w_energy * res_energy + w_mass * res_mass
     return total, res_energy.item(), res_mass.item()
@@ -328,7 +330,24 @@ def train(args):
     logger.info(f"Model params: {total_params:,}")
 
     lr = getattr(config, "lr", args.lr)
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
+
+    # Separate param groups: MLP gets weight-decay, physics params do NOT
+    # (weight-decay drives unused params to 0 during warmup)
+    physics_param_names = {"theta_eff", "afr_stoich"}
+    mlp_params = []
+    phys_params = []   # theta_eff, afr_stoich, and air_net
+    for name, param in model.named_parameters():
+        if any(pn in name for pn in physics_param_names) or "air_net" in name:
+            phys_params.append(param)
+        else:
+            mlp_params.append(param)
+    logger.info(f"Param groups — MLP: {sum(p.numel() for p in mlp_params):,}  "
+                f"Physics: {sum(p.numel() for p in phys_params):,}")
+
+    optimizer = optim.Adam([
+        {"params": mlp_params,  "weight_decay": 1e-5},
+        {"params": phys_params, "weight_decay": 0.0},
+    ], lr=lr)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=100
     )
@@ -352,6 +371,8 @@ def train(args):
         model.train()
         epoch_data_loss = 0.0
         epoch_phys_loss = 0.0
+        epoch_res_e = 0.0
+        epoch_res_m = 0.0
         n_batches = 0
 
         for x_s, x_r, y_b in train_loader:
@@ -370,7 +391,14 @@ def train(args):
                 w_energy=w_energy, w_mass=w_mass,
             )
 
-            w_phys_eff = 0.0 if epoch <= warmup_epochs else w_physics
+            # Linear ramp: 0 during warmup, then ramp 0→w_physics over ramp_len epochs
+            ramp_len = 100
+            if epoch <= warmup_epochs:
+                w_phys_eff = 0.0
+            elif epoch <= warmup_epochs + ramp_len:
+                w_phys_eff = w_physics * (epoch - warmup_epochs) / ramp_len
+            else:
+                w_phys_eff = w_physics
             total_loss = w_data * data_loss + w_phys_eff * phys_loss
             total_loss.backward()
 
@@ -379,10 +407,14 @@ def train(args):
 
             epoch_data_loss += data_loss.item()
             epoch_phys_loss += phys_loss.item()
+            epoch_res_e += res_e
+            epoch_res_m += res_m
             n_batches += 1
 
         avg_data = epoch_data_loss / n_batches
         avg_phys = epoch_phys_loss / n_batches
+        avg_res_e = epoch_res_e / n_batches
+        avg_res_m = epoch_res_m / n_batches
 
         # ── Validation ────────────────────────────────────────────────
         model.eval()
@@ -398,7 +430,7 @@ def train(args):
         if epoch % 50 == 0 or epoch == 1:
             logger.info(
                 f"Epoch {epoch:>5}/{epochs}  "
-                f"data={avg_data:.4f}  phys={avg_phys:.4f}  "
+                f"data={avg_data:.4f}  phys={avg_phys:.4f}  (E={avg_res_e:.4f} M={avg_res_m:.4f})  "
                 f"val={val_loss:.4f}  "
                 f"θ_eff={torch.nn.functional.softplus(model.theta_eff).item():.4f}  "
                 f"AFR_s={model.afr_stoich.item():.2f}  "
@@ -413,7 +445,7 @@ def train(args):
                 "train/phys_loss": avg_phys,
                 "train/total_loss": avg_data + avg_phys,
                 "val/loss": val_loss,
-                "params/theta_eff": model.theta_eff.item(),
+                "params/theta_eff": torch.nn.functional.softplus(model.theta_eff).item(),
                 "params/afr_stoich": model.afr_stoich.item(),
                 "lr": optimizer.param_groups[0]["lr"],
             })
