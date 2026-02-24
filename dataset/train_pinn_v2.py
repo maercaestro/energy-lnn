@@ -71,14 +71,13 @@ class FurnacePINN_v2(nn.Module):
     Outputs (2):  OutletT, ExcessO2
     """
 
-    def __init__(self, input_dim: int = 7, hidden_dim: int = 64, n_layers: int = 4,
-                 dropout: float = 0.3):
+    def __init__(self, input_dim: int = 7, hidden_dim: int = 64, n_layers: int = 4):
         super().__init__()
 
         # ── Main prediction network ──────────────────────────────────
-        layers = [nn.Linear(input_dim, hidden_dim), nn.Tanh(), nn.Dropout(dropout)]
+        layers = [nn.Linear(input_dim, hidden_dim), nn.Tanh()]
         for _ in range(n_layers - 1):
-            layers += [nn.Linear(hidden_dim, hidden_dim), nn.Tanh(), nn.Dropout(dropout)]
+            layers += [nn.Linear(hidden_dim, hidden_dim), nn.Tanh()]
         layers.append(nn.Linear(hidden_dim, 2))
         self.net = nn.Sequential(*layers)
 
@@ -334,12 +333,10 @@ def train(args):
     # ── Model ─────────────────────────────────────────────────────────
     hidden = getattr(config, "hidden_dim", args.hidden_dim)
     n_layers = getattr(config, "n_layers", args.n_layers)
-    dropout = getattr(config, "dropout", args.dropout)
     model = FurnacePINN_v2(
         input_dim=len(feature_cols),
         hidden_dim=hidden,
         n_layers=n_layers,
-        dropout=dropout,
     ).to(device)
 
     total_params = sum(p.numel() for p in model.parameters())
@@ -361,7 +358,7 @@ def train(args):
                 f"Physics: {sum(p.numel() for p in phys_params):,}")
 
     optimizer = optim.Adam([
-        {"params": mlp_params,  "weight_decay": 1e-3},
+        {"params": mlp_params,  "weight_decay": 1e-5},
         {"params": phys_params, "weight_decay": 0.0},
     ], lr=lr)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -432,7 +429,7 @@ def train(args):
         avg_res_e = epoch_res_e / n_batches
         avg_res_m = epoch_res_m / n_batches
 
-        # ── Validation (data + physics so physics improvements count) ──
+        # ── Validation (data-only for early stopping, physics logged separately) ──
         model.eval()
         with torch.no_grad():
             v_preds = model(X_va_s)
@@ -440,20 +437,22 @@ def train(args):
             v_loss_O2 = nn.MSELoss()(v_preds[:, 1], y_va[:, 1]) / (var_O2 + 1e-8)
             val_data = (v_loss_T + v_loss_O2).item()
 
-            v_phys, _, _ = physics_loss_v2(
+            v_phys, v_res_e, v_res_m = physics_loss_v2(
                 model, v_preds, X_va_r, var_T, var_O2,
                 w_energy=w_energy, w_mass=w_mass,
             )
-            val_loss = val_data + w_phys_eff * v_phys.item()
+            val_phys = v_phys.item()
 
+        # Early stopping on DATA-only val loss (apples-to-apples with train data)
+        val_loss = val_data
         scheduler.step(val_loss)
 
-        # Logging
+        # Logging — show val_data and val_phys separately
         if epoch % 50 == 0 or epoch == 1:
             logger.info(
                 f"Epoch {epoch:>5}/{epochs}  "
                 f"data={avg_data:.4f}  phys={avg_phys:.4f}  (E={avg_res_e:.4f} M={avg_res_m:.4f})  "
-                f"val={val_loss:.4f}  "
+                f"val_d={val_data:.4f}  val_p={val_phys:.4f}  "
                 f"θ_eff={torch.nn.functional.softplus(model.theta_eff).item():.4f}  "
                 f"AFR_s={torch.nn.functional.softplus(model.afr_stoich).item():.2f}  "
                 f"lr={optimizer.param_groups[0]['lr']:.2e}"
@@ -466,7 +465,8 @@ def train(args):
                 "train/data_loss": avg_data,
                 "train/phys_loss": avg_phys,
                 "train/total_loss": avg_data + avg_phys,
-                "val/loss": val_loss,
+                "val/data_loss": val_data,
+                "val/phys_loss": val_phys,
                 "params/theta_eff": torch.nn.functional.softplus(model.theta_eff).item(),
                 "params/afr_stoich": torch.nn.functional.softplus(model.afr_stoich).item(),
                 "lr": optimizer.param_groups[0]["lr"],
@@ -547,8 +547,7 @@ def parse_args():
     p.add_argument("--data_path", default="cleaned_furnace_data.csv")
     # Model
     p.add_argument("--hidden_dim", type=int, default=64)
-    p.add_argument("--n_layers",   type=int, default=3)
-    p.add_argument("--dropout",    type=float, default=0.3)
+    p.add_argument("--n_layers",   type=int, default=4)
     # Training
     p.add_argument("--epochs",     type=int,   default=3000)
     p.add_argument("--batch_size", type=int,   default=512)
