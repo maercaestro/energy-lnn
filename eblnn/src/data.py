@@ -120,7 +120,8 @@ class DataPipeline:
     def build(self) -> "DataPipeline":
         """Load data, scale, split, and create DataLoaders.  Returns self."""
 
-        # 1. Load / generate
+        # 1. Load / generate  (ensure parent directory exists first)
+        Path(self.data_path).parent.mkdir(parents=True, exist_ok=True)
         df = load_or_generate_data(
             data_path=self.data_path,
             num_sequences=self.num_sequences,

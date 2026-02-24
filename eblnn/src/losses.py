@@ -98,10 +98,16 @@ class ContrastiveDivergenceLoss(nn.Module):
                       a safety buffer.  Set 0 for the standard CD.
     """
 
-    def __init__(self, l2_reg: float = 0.01, margin: float = 0.0) -> None:
+    def __init__(
+        self,
+        l2_reg: float = 0.1,
+        margin: float = 0.0,
+        energy_clamp: float | None = 20.0,
+    ) -> None:
         super().__init__()
         self.l2_reg = l2_reg
         self.margin = margin
+        self.energy_clamp = energy_clamp   # hard-clip energy magnitudes
 
     def forward(
         self,
@@ -121,6 +127,11 @@ class ContrastiveDivergenceLoss(nn.Module):
         loss    : scalar tensor
         metrics : dict with 'e_pos', 'e_neg', 'cd_gap' for logging
         """
+        # Hard-clamp individual energies to prevent collapse to ±∞
+        if self.energy_clamp is not None:
+            energy_pos = energy_pos.clamp(-self.energy_clamp, self.energy_clamp)
+            energy_neg = energy_neg.clamp(-self.energy_clamp, self.energy_clamp)
+
         e_pos = energy_pos.mean()
         e_neg = energy_neg.mean()
 
@@ -165,13 +176,16 @@ class JointLoss(nn.Module):
     def __init__(
         self,
         alpha: float = 1.0,
-        l2_reg: float = 0.01,
+        l2_reg: float = 0.1,
         margin: float = 0.0,
+        energy_clamp: float | None = 20.0,
     ) -> None:
         super().__init__()
         self.alpha = alpha
         self.phys_loss = PhysicsLoss()
-        self.cd_loss = ContrastiveDivergenceLoss(l2_reg=l2_reg, margin=margin)
+        self.cd_loss = ContrastiveDivergenceLoss(
+            l2_reg=l2_reg, margin=margin, energy_clamp=energy_clamp
+        )
 
     def forward(
         self,
@@ -179,7 +193,7 @@ class JointLoss(nn.Module):
         phys_target: torch.Tensor,
         energy_pos: torch.Tensor,
         energy_neg: torch.Tensor,
-    ) -> tuple[torch.Tensor, dict[str, float]]:
+    ) -> tuple[torch.Tensor, dict[str, float], float]:
         """
         Parameters
         ----------
@@ -205,4 +219,4 @@ class JointLoss(nn.Module):
             **cd_metrics,
         }
 
-        return total, metrics
+        return total, metrics, l_phys.item()

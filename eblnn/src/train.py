@@ -108,6 +108,7 @@ class GenerativeTrainer:
             alpha=self.alpha,
             l2_reg=self.l2_reg,
             margin=self.margin,
+            energy_clamp=config.get("energy_clamp", 20.0),
         )
         self.optimizer = optim.Adam(model.parameters(), lr=self.lr)
 
@@ -117,6 +118,7 @@ class GenerativeTrainer:
             "train_phys": [], "val_phys": [],
             "train_cd": [],   "val_cd": [],
             "e_pos": [],      "e_neg": [],    "cd_gap": [],
+            "val_phys_loss": [],   # used for early stopping
         }
         self.best_val_loss = float("inf")
         self.best_epoch = 0
@@ -185,7 +187,7 @@ class GenerativeTrainer:
             e_neg = e_neg_seq.squeeze(-1).mean(dim=1)    # (B,)
 
             # --- 4. Joint loss ---
-            loss, metrics = self.criterion(
+            loss, metrics, phys_loss_val = self.criterion(
                 phys_pred, y_pos, e_pos, e_neg
             )
 
@@ -230,7 +232,7 @@ class GenerativeTrainer:
                 _, e_neg_seq, _ = self.model(x_neg)
                 e_neg = e_neg_seq.squeeze(-1).mean(dim=1)
 
-                loss, metrics = self.criterion(phys_pred, y_pos, e_pos, e_neg)
+                loss, metrics = self.criterion(phys_pred, y_pos, e_pos, e_neg)[:2]
 
                 totals["loss"] += metrics["loss_total"]
                 totals["phys"] += metrics["loss_physics"]
@@ -282,6 +284,7 @@ class GenerativeTrainer:
             self.history["val_loss"].append(va["loss"])
             self.history["train_phys"].append(tr["phys"])
             self.history["val_phys"].append(va["phys"])
+            self.history["val_phys_loss"].append(va["phys"])
             self.history["train_cd"].append(tr["cd"])
             self.history["val_cd"].append(va["cd"])
             self.history["e_pos"].append(tr["e_pos"])
@@ -312,16 +315,19 @@ class GenerativeTrainer:
                     f"E+={tr['e_pos']:.3f} E-={tr['e_neg']:.3f} gap={tr['cd_gap']:.3f}"
                 )
 
-            # --- Best model ---
-            if va["loss"] < self.best_val_loss - self.min_delta:
-                self.best_val_loss = va["loss"]
+            # --- Best model: use physics loss as checkpoint criterion ---
+            # (total loss can legitimately go negative due to CD; physics
+            #  loss is a stable, unsigned measure of prediction quality)
+            checkpoint_metric = va["phys"]
+            if checkpoint_metric < self.best_val_loss - self.min_delta:
+                self.best_val_loss = checkpoint_metric
                 self.best_epoch = epoch + 1
                 self.epochs_no_improve = 0
                 path = os.path.join(save_path, "best_model.pth")
                 torch.save(self.model.state_dict(), path)
-                print(f"  -> Best model saved (val={self.best_val_loss:.4f})")
+                print(f"  -> Best model saved (val_phys={self.best_val_loss:.4f})")
                 if self.use_wandb:
-                    wandb.run.summary["best_val_loss"] = self.best_val_loss
+                    wandb.run.summary["best_val_phys_loss"] = self.best_val_loss
                     wandb.run.summary["best_epoch"] = self.best_epoch
             else:
                 self.epochs_no_improve += 1

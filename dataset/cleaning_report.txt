@@ -1,0 +1,71 @@
+============================================================
+Furnace Data Cleaning Pipeline
+============================================================
+
+[1] Loaded 525,600 rows, 11 columns
+    Columns: ['Date', 'InletT', 'OutletT', 'DraftP', 'OP_Damper', 'InletFlow', 'ExcessO2', 'FGFlow', 'FGPressure', 'StackTemp', 'Bridgewall']
+
+[2] Bad-data tags replaced: 0
+
+[3] Coerced to numeric. Total NaN cells: 171
+
+[4] Dropped StackTemp (frozen at ~309°C)
+    Retained columns: ['Date', 'InletT', 'OutletT', 'DraftP', 'OP_Damper', 'InletFlow', 'ExcessO2', 'FGFlow', 'FGPressure', 'Bridgewall']
+    InletFlow lt 20: 16,399 rows flagged
+    OutletT lt 200: 14,765 rows flagged
+    FGFlow lt 50: 13,765 rows flagged
+
+[5] Shutdown rows: 18,033 (3.4%)
+
+[6] Detected 28 restart events
+    Post-restart ramp-up rows removed: 763
+
+[7] ExcessO2 > 15.0: 704 additional rows
+
+[8] OP_Damper outside [0, 100]: 0 additional rows
+
+[*] Total rows removed: 19,500 (3.7%)
+    Remaining: 506,100
+
+[9] Interpolated NaN gaps ≤ 10 min:
+    Dropped 169 rows with un-interpolatable NaN gaps
+    InletT: 7,291 outlier rows (range [263.9, 311.1])
+    OutletT: 5,576 outlier rows (range [304.1, 341.9])
+    DraftP: 6,627 outlier rows (range [-10.8, 1.8])
+    OP_Damper: 10,230 outlier rows (range [36.0, 72.1])
+    InletFlow: 3 outlier rows (range [223.6, 502.6])
+    ExcessO2: 7,840 outlier rows (range [1.0, 6.7])
+    FGFlow: 2,362 outlier rows (range [665.9, 2079.7])
+    FGPressure: 1,504 outlier rows (range [0.5, 2.2])
+    Bridgewall: 5,669 outlier rows (range [556.7, 751.9])
+
+[10] 3σ outliers removed: 35,255
+
+[11] Contiguous block analysis:
+    Total blocks: 541
+    Longest block: 92,431 min (1540.5 hrs)
+    Median block: 7 min (0.1 hrs)
+    Blocks ≥ 60 min:  108
+    Blocks ≥ 240 min: 68
+    Blocks ≥ 1440 min (1 day): 31
+
+============================================================
+FINAL DATASET
+============================================================
+  Rows:    470,676  (from 525,600 raw, 89.6% retained)
+  Columns: ['Date', 'InletT', 'OutletT', 'DraftP', 'OP_Damper', 'InletFlow', 'ExcessO2', 'FGFlow', 'FGPressure', 'Bridgewall']
+  NaN:     0
+  dtypes:  all float64 (except Date: int)
+
+Column statistics:
+                Date         InletT        OutletT         DraftP      OP_Damper      InletFlow       ExcessO2         FGFlow     FGPressure     Bridgewall
+count       470676.0  470676.000000  470676.000000  470676.000000  470676.000000  470676.000000  470676.000000  470676.000000  470676.000000  470676.000000
+mean   262203.556056     288.073910     323.780045      -4.395927      54.555439     368.436722       3.748079    1397.996707       1.364556     658.047035
+std    148513.329228       6.671241       5.072712       1.894239       5.264082      42.829156       0.789547     208.890663       0.266387      27.449948
+min              1.0     263.892261     304.061805     -10.777968      36.017812     245.313096       0.979520     720.954811       0.544069     556.706737
+25%        136459.75     285.240212     322.445326      -5.530016      52.299999     342.555476       3.221103    1275.146343       1.153954     642.406338
+50%         259629.5     289.017913     325.082761      -4.189751      55.000000     375.058513       3.627009    1412.736332       1.339496     661.182058
+75%        393959.25     292.427934     326.983462      -3.037130      58.000000     399.728787       4.219245    1543.680057       1.550553     678.041625
+max         525600.0     304.966302     335.238462       1.564260      67.500000     442.404420       6.676984    1976.581915       2.183519     723.175404
+
+Saved → /Users/abuhuzaifahbidin/Documents/GitHub/energy-lnn/dataset/cleaned_furnace_data.csv

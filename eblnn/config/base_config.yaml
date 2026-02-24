@@ -28,7 +28,8 @@ training:
   epochs: 200
   learning_rate: 0.001
   alpha: 1.0          # Weight balancing L_physics vs L_CD
-  l2_reg: 0.01        # Energy-magnitude regularisation inside L_CD
+  l2_reg: 0.1         # Energy-magnitude regularisation inside L_CD (equilibrium ~±5)
+  energy_clamp: 20.0  # Hard clamp on energy values before CD loss
   margin: 0.0         # Hinge margin (0 = standard CD)
   early_stopping: true
   patience: 20
