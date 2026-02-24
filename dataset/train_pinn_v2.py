@@ -167,8 +167,13 @@ def physics_loss_v2(
 
     # Mass balance (O2)
     air_supply = model.air_supply(x_raw)                            # (B,)
-    lam = air_supply / (m_fuel * model.afr_stoich + 1e-6)
-    lam = torch.clamp(lam, min=1.01, max=5.0)                      # physical range
+    afr_pos = torch.nn.functional.softplus(model.afr_stoich)        # keep AFR > 0
+    lam_raw = air_supply / (m_fuel * afr_pos + 1e-6)
+
+    # Soft lower bound at 1.01 — gradient ALWAYS flows (hard clamp killed it)
+    # softplus(x-1.01)+1.01 ≈ x when x>>1.01, ≈ 1.7 when x=1.01, ≈ 1.35 when x=0
+    lam = 1.01 + torch.nn.functional.softplus(lam_raw - 1.01)
+
     O2_calc = 21.0 * (lam - 1.0) / lam
 
     # Normalise by mean(O2_calc²) — same self-scaling approach as energy
@@ -217,7 +222,7 @@ def calculate_metrics(
         "r2_T": r2_T.item(),
         "r2_O2": r2_O2.item(),
         "theta_eff": torch.nn.functional.softplus(model.theta_eff).item(),
-        "afr_stoich": model.afr_stoich.item(),
+        "afr_stoich": torch.nn.functional.softplus(model.afr_stoich).item(),
     }
 
 
@@ -433,7 +438,7 @@ def train(args):
                 f"data={avg_data:.4f}  phys={avg_phys:.4f}  (E={avg_res_e:.4f} M={avg_res_m:.4f})  "
                 f"val={val_loss:.4f}  "
                 f"θ_eff={torch.nn.functional.softplus(model.theta_eff).item():.4f}  "
-                f"AFR_s={model.afr_stoich.item():.2f}  "
+                f"AFR_s={torch.nn.functional.softplus(model.afr_stoich).item():.2f}  "
                 f"lr={optimizer.param_groups[0]['lr']:.2e}"
             )
 
@@ -446,7 +451,7 @@ def train(args):
                 "train/total_loss": avg_data + avg_phys,
                 "val/loss": val_loss,
                 "params/theta_eff": torch.nn.functional.softplus(model.theta_eff).item(),
-                "params/afr_stoich": model.afr_stoich.item(),
+                "params/afr_stoich": torch.nn.functional.softplus(model.afr_stoich).item(),
                 "lr": optimizer.param_groups[0]["lr"],
             })
 
