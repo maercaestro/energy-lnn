@@ -429,13 +429,19 @@ def train(args):
         avg_res_e = epoch_res_e / n_batches
         avg_res_m = epoch_res_m / n_batches
 
-        # ── Validation ────────────────────────────────────────────────
+        # ── Validation (data + physics so physics improvements count) ──
         model.eval()
         with torch.no_grad():
             v_preds = model(X_va_s)
             v_loss_T  = nn.MSELoss()(v_preds[:, 0], y_va[:, 0]) / (var_T + 1e-8)
             v_loss_O2 = nn.MSELoss()(v_preds[:, 1], y_va[:, 1]) / (var_O2 + 1e-8)
-            val_loss = (v_loss_T + v_loss_O2).item()
+            val_data = (v_loss_T + v_loss_O2).item()
+
+            v_phys, _, _ = physics_loss_v2(
+                model, v_preds, X_va_r, var_T, var_O2,
+                w_energy=w_energy, w_mass=w_mass,
+            )
+            val_loss = val_data + w_phys_eff * v_phys.item()
 
         scheduler.step(val_loss)
 
@@ -462,6 +468,12 @@ def train(args):
                 "params/afr_stoich": torch.nn.functional.softplus(model.afr_stoich).item(),
                 "lr": optimizer.param_groups[0]["lr"],
             })
+
+        # Reset patience when warmup ends — give physics a fair shot
+        if epoch == warmup_epochs + 1:
+            best_val_loss = float("inf")
+            patience_counter = 0
+            logger.info("  [warmup ended → patience & best_val reset]")
 
         # Early stopping + checkpoint
         if val_loss < best_val_loss - 1e-5:
@@ -540,12 +552,12 @@ def parse_args():
     p.add_argument("--patience",   type=int,   default=300)
     # Loss weights
     p.add_argument("--w_data",     type=float, default=1.0)
-    p.add_argument("--w_physics",  type=float, default=0.001,
-                   help="Physics loss weight (active only after warmup)")
+    p.add_argument("--w_physics",  type=float, default=0.1,
+                   help="Physics loss weight (active after warmup)")
     p.add_argument("--w_energy",   type=float, default=1.0)
     p.add_argument("--w_mass",     type=float, default=1.0)
-    p.add_argument("--warmup_epochs", type=int, default=200,
-                   help="Epochs to train data-only before enabling physics loss")
+    p.add_argument("--warmup_epochs", type=int, default=20,
+                   help="Short warmup: data-only so MLP is non-random before physics")
     # Infra
     p.add_argument("--checkpoint_dir", default="checkpoints_v2")
     p.add_argument("--log_dir",        default="logs_v2")
