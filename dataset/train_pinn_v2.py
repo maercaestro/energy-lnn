@@ -89,9 +89,10 @@ class FurnacePINN_v2(nn.Module):
         )
 
         # ── Learnable physics: θ_eff = η · Cp ───────────────────────
-        # Absorbs furnace efficiency and fluid Cp into one parameter.
-        # Rough init: η ≈ 0.80, Cp ≈ 2.5 kJ/kg·K → θ ≈ 2.0
-        self.theta_eff = nn.Parameter(torch.tensor(2.0, dtype=torch.float32))
+        # Stored as raw (unconstrained) parameter; θ_eff = softplus(self.theta_eff)
+        # guarantees strict positivity.  Init raw value = softplus⁻¹(2.0) ≈ 1.854
+        # so that softplus(init) ≈ 2.0  (η≈0.80, Cp≈2.5 kJ/kg·K)
+        self.theta_eff = nn.Parameter(torch.tensor(1.854, dtype=torch.float32))
 
         # Optional: learnable stoichiometric ratio (backup if default is off)
         self.afr_stoich = nn.Parameter(torch.tensor(CONSTANTS["AFR_STOICH"], dtype=torch.float32))
@@ -152,12 +153,17 @@ def physics_loss_v2(
     m_proc = InletFlow_c / 3600.0                                   # kg/s
     m_fuel = (FGFlow_c * CONSTANTS["RHO_FUEL"]) / 3600.0            # kg/s
 
+    # θ_eff must be strictly positive: apply softplus to raw parameter
+    theta_pos = torch.nn.functional.softplus(model.theta_eff)
+
     # Energy balance: Q_in ≈ Q_out
     Q_in  = m_fuel * CONSTANTS["LHV"]                               # kJ/s
     # θ_eff = η · Cp, so Q_out = m_proc · θ_eff · ΔT
-    Q_out = m_proc * model.theta_eff * (pred_T - InletT)            # kJ/s
+    Q_out = m_proc * theta_pos * (pred_T - InletT)                  # kJ/s
 
-    res_energy = torch.mean((Q_in - Q_out) ** 2) / (var_T + 1e-8)
+    # Normalise by mean Q_in² → residual dimensionless, ~1 at a good solution
+    q_scale = (Q_in.detach() ** 2).mean().clamp(min=1e-6)
+    res_energy = torch.mean((Q_in - Q_out) ** 2) / q_scale
 
     # Mass balance (O2)
     air_supply = model.air_supply(x_raw)                            # (B,)
@@ -208,7 +214,7 @@ def calculate_metrics(
         "mae_O2": mae_O2.item(),
         "r2_T": r2_T.item(),
         "r2_O2": r2_O2.item(),
-        "theta_eff": model.theta_eff.item(),
+        "theta_eff": torch.nn.functional.softplus(model.theta_eff).item(),
         "afr_stoich": model.afr_stoich.item(),
     }
 
@@ -332,6 +338,7 @@ def train(args):
     w_physics = getattr(config, "w_physics", args.w_physics)
     w_energy  = getattr(config, "w_energy",  args.w_energy)
     w_mass    = getattr(config, "w_mass",    args.w_mass)
+    warmup_epochs = getattr(config, "warmup_epochs", args.warmup_epochs)
 
     best_val_loss = float("inf")
     patience_counter = 0
@@ -339,7 +346,7 @@ def train(args):
 
     # ── Training loop ─────────────────────────────────────────────────
     logger.info(f"\nStarting training — {epochs} epochs")
-    logger.info(f"  w_data={w_data}  w_physics={w_physics}  w_energy={w_energy}  w_mass={w_mass}")
+    logger.info(f"  w_data={w_data}  w_physics={w_physics}  w_energy={w_energy}  w_mass={w_mass}  warmup_epochs={warmup_epochs}")
 
     for epoch in range(1, epochs + 1):
         model.train()
@@ -357,13 +364,14 @@ def train(args):
             loss_O2 = nn.MSELoss()(preds[:, 1], y_b[:, 1]) / (var_O2 + 1e-8)
             data_loss = loss_T + loss_O2
 
-            # Physics loss
+            # Physics loss — gated by warmup
             phys_loss, res_e, res_m = physics_loss_v2(
                 model, preds, x_r, var_T, var_O2,
                 w_energy=w_energy, w_mass=w_mass,
             )
 
-            total_loss = w_data * data_loss + w_physics * phys_loss
+            w_phys_eff = 0.0 if epoch <= warmup_epochs else w_physics
+            total_loss = w_data * data_loss + w_phys_eff * phys_loss
             total_loss.backward()
 
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
@@ -392,7 +400,7 @@ def train(args):
                 f"Epoch {epoch:>5}/{epochs}  "
                 f"data={avg_data:.4f}  phys={avg_phys:.4f}  "
                 f"val={val_loss:.4f}  "
-                f"θ_eff={model.theta_eff.item():.4f}  "
+                f"θ_eff={torch.nn.functional.softplus(model.theta_eff).item():.4f}  "
                 f"AFR_s={model.afr_stoich.item():.2f}  "
                 f"lr={optimizer.param_groups[0]['lr']:.2e}"
             )
@@ -487,9 +495,12 @@ def parse_args():
     p.add_argument("--patience",   type=int,   default=300)
     # Loss weights
     p.add_argument("--w_data",     type=float, default=1.0)
-    p.add_argument("--w_physics",  type=float, default=0.1)
+    p.add_argument("--w_physics",  type=float, default=0.001,
+                   help="Physics loss weight (active only after warmup)")
     p.add_argument("--w_energy",   type=float, default=1.0)
     p.add_argument("--w_mass",     type=float, default=1.0)
+    p.add_argument("--warmup_epochs", type=int, default=200,
+                   help="Epochs to train data-only before enabling physics loss")
     # Infra
     p.add_argument("--checkpoint_dir", default="checkpoints_v2")
     p.add_argument("--log_dir",        default="logs_v2")
