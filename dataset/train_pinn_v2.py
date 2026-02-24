@@ -51,10 +51,15 @@ def setup_logging(log_dir: str) -> logging.Logger:
 # 2. Physics constants
 # ──────────────────────────────────────────────────────────────────────────
 CONSTANTS = {
-    "LHV": 46000.0,           # kJ/kg  (refinery fuel gas, typical)
+    "LHV": 50_000.0,          # kJ/kg  (clean natural gas / methane, LHV)
     "AFR_STOICH": 17.2,       # kg air / kg fuel (methane-dominant)
-    "RHO_FUEL": 0.85,         # kg/m³  (refinery fuel gas density at meter conditions)
+    "RHO_FUEL": 0.72,         # kg/Nm³ (natural gas at STP, CH₄ = 0.717)
+    "RHO_DIESEL": 850.0,      # kg/m³  (diesel, 0.84-0.86 range)
+    "BBL_TO_M3": 0.159,       # m³/bbl (1 US oil barrel = 0.159 m³)
 }
+# InletFlow is in kbbl/day → kg/s:  ×1000 bbl/kbbl × 0.159 m³/bbl × 850 kg/m³ ÷ 86400 s/day
+KBBL_DAY_TO_KG_S = (1000.0 * CONSTANTS["BBL_TO_M3"] * CONSTANTS["RHO_DIESEL"]
+                    / 86400.0)   # ≈ 1.564 kg/s per kbbl/day
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -90,9 +95,10 @@ class FurnacePINN_v2(nn.Module):
 
         # ── Learnable physics: θ_eff = η · Cp ───────────────────────
         # Stored as raw (unconstrained) parameter; θ_eff = softplus(self.theta_eff)
-        # guarantees strict positivity.  Init raw value = softplus⁻¹(2.0) ≈ 1.854
-        # so that softplus(init) ≈ 2.0  (η≈0.80, Cp≈2.5 kJ/kg·K)
-        self.theta_eff = nn.Parameter(torch.tensor(1.854, dtype=torch.float32))
+        # guarantees strict positivity.
+        # With correct kbbl/day units, balance θ ≈ 0.7 (η·Cp lumped).
+        # Init raw = 0.0 → softplus(0) = ln(2) ≈ 0.693, near balance.
+        self.theta_eff = nn.Parameter(torch.tensor(0.0, dtype=torch.float32))
 
         # Optional: learnable stoichiometric ratio (backup if default is off)
         self.afr_stoich = nn.Parameter(torch.tensor(CONSTANTS["AFR_STOICH"], dtype=torch.float32))
@@ -149,8 +155,10 @@ def physics_loss_v2(
     FGFlow_c    = torch.clamp(FGFlow, min=50.0)
     InletFlow_c = torch.clamp(InletFlow, min=50.0)
 
-    # Mass flows (assuming units: InletFlow in mass flow (kg/hr → kg/s))
-    m_proc = InletFlow_c / 3600.0                                   # kg/s
+    # Mass flows with correct unit conversions
+    # InletFlow: kbbl/day → kg/s
+    m_proc = InletFlow_c * KBBL_DAY_TO_KG_S                         # kg/s
+    # FGFlow: Nm³/hr → kg/s
     m_fuel = (FGFlow_c * CONSTANTS["RHO_FUEL"]) / 3600.0            # kg/s
 
     # θ_eff must be strictly positive: apply softplus to raw parameter
