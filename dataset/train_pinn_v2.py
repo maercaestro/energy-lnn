@@ -199,13 +199,16 @@ def physics_loss_v2(
 def calculate_metrics(
     model: FurnacePINN_v2,
     X_scaled: torch.Tensor,
-    y_true: torch.Tensor,
+    y_true_raw: torch.Tensor,
+    y_mean_t: torch.Tensor,
+    y_std_t: torch.Tensor,
     device: str = "cpu",
 ) -> dict:
     model.eval()
     X_s = X_scaled.to(device)
-    y_t = y_true.to(device)
-    preds = model(X_s)
+    y_t = y_true_raw.to(device)           # raw (un-normalised) targets
+    preds_n = model(X_s)                  # normalised predictions
+    preds = preds_n * y_std_t + y_mean_t  # → raw scale for metric comparison
 
     mse_T  = nn.MSELoss()(preds[:, 0], y_t[:, 0])
     mse_O2 = nn.MSELoss()(preds[:, 1], y_t[:, 1])
@@ -311,6 +314,16 @@ def train(args):
     var_O2 = float(np.var(y_train[:, 1]))
     logger.info(f"Target variance — OutletT: {var_T:.4f}  ExcessO2: {var_O2:.4f}")
 
+    # Target z-score normalisation — critical for stable convergence
+    # (raw OutletT ~324 °C is far from 0; without this the network stalls)
+    y_mean = y_train.mean(axis=0)  # (2,) = [mean_OutletT, mean_ExcessO2]
+    y_std  = y_train.std(axis=0)   # (2,)
+    logger.info(f"Target mean — OutletT: {y_mean[0]:.2f}  ExcessO2: {y_mean[1]:.4f}")
+    logger.info(f"Target std  — OutletT: {y_std[0]:.4f}  ExcessO2: {y_std[1]:.4f}")
+    y_train_n = (y_train - y_mean) / y_std
+    y_val_n   = (y_val   - y_mean) / y_std
+    y_test_n  = (y_test  - y_mean) / y_std
+
     # Save scaler
     scaler_path = os.path.join(args.checkpoint_dir, "scaler_v2.pkl")
     with open(scaler_path, "wb") as f:
@@ -321,13 +334,15 @@ def train(args):
     def to_tensor(*arrays):
         return [torch.tensor(a, dtype=torch.float32).to(device) for a in arrays]
 
-    X_tr_s, X_tr_r, y_tr = to_tensor(X_train_s, X_train_raw, y_train)
-    X_va_s, X_va_r, y_va = to_tensor(X_val_s, X_val_raw, y_val)
-    X_te_s, X_te_r, y_te = to_tensor(X_test_s, X_test_raw, y_test)
+    X_tr_s, X_tr_r, y_tr, y_tr_n = to_tensor(X_train_s, X_train_raw, y_train, y_train_n)
+    X_va_s, X_va_r, y_va, y_va_n = to_tensor(X_val_s, X_val_raw, y_val, y_val_n)
+    X_te_s, X_te_r, y_te, y_te_n = to_tensor(X_test_s, X_test_raw, y_test, y_test_n)
+    y_mean_t = torch.tensor(y_mean, dtype=torch.float32).to(device)
+    y_std_t  = torch.tensor(y_std,  dtype=torch.float32).to(device)
 
-    # DataLoader
+    # DataLoader (model predicts in normalised target space)
     bs = getattr(config, "batch_size", args.batch_size)
-    train_ds = TensorDataset(X_tr_s, X_tr_r, y_tr)
+    train_ds = TensorDataset(X_tr_s, X_tr_r, y_tr_n)
     train_loader = DataLoader(train_ds, batch_size=bs, shuffle=True)
 
     # ── Model ─────────────────────────────────────────────────────────
@@ -391,16 +406,18 @@ def train(args):
         for x_s, x_r, y_b in train_loader:
             optimizer.zero_grad()
 
-            preds = model(x_s)
+            preds = model(x_s)  # normalised target space
 
-            # Data loss: per-output normalised MSE
-            loss_T  = nn.MSELoss()(preds[:, 0], y_b[:, 0]) / (var_T + 1e-8)
-            loss_O2 = nn.MSELoss()(preds[:, 1], y_b[:, 1]) / (var_O2 + 1e-8)
-            data_loss = loss_T + loss_O2
+            # Data loss: MSE in normalised space
+            # (both outputs have ~unit variance → equal weighting automatic)
+            data_loss = nn.MSELoss()(preds, y_b)
+
+            # Inverse-transform predictions for physics loss (needs raw °C / %)
+            preds_raw = preds * y_std_t + y_mean_t
 
             # Physics loss — gated by warmup
             phys_loss, res_e, res_m = physics_loss_v2(
-                model, preds, x_r, var_T, var_O2,
+                model, preds_raw, x_r, var_T, var_O2,
                 w_energy=w_energy, w_mass=w_mass,
             )
 
@@ -415,7 +432,7 @@ def train(args):
             total_loss = w_data * data_loss + w_phys_eff * phys_loss
             total_loss.backward()
 
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
             optimizer.step()
 
             epoch_data_loss += data_loss.item()
@@ -432,13 +449,12 @@ def train(args):
         # ── Validation (data-only for early stopping, physics logged separately) ──
         model.eval()
         with torch.no_grad():
-            v_preds = model(X_va_s)
-            v_loss_T  = nn.MSELoss()(v_preds[:, 0], y_va[:, 0]) / (var_T + 1e-8)
-            v_loss_O2 = nn.MSELoss()(v_preds[:, 1], y_va[:, 1]) / (var_O2 + 1e-8)
-            val_data = (v_loss_T + v_loss_O2).item()
+            v_preds = model(X_va_s)  # normalised space
+            val_data = nn.MSELoss()(v_preds, y_va_n).item()
 
+            v_preds_raw = v_preds * y_std_t + y_mean_t
             v_phys, v_res_e, v_res_m = physics_loss_v2(
-                model, v_preds, X_va_r, var_T, var_O2,
+                model, v_preds_raw, X_va_r, var_T, var_O2,
                 w_energy=w_energy, w_mass=w_mass,
             )
             val_phys = v_phys.item()
@@ -492,6 +508,8 @@ def train(args):
                 "afr_stoich": model.afr_stoich.item(),
                 "var_T": var_T,
                 "var_O2": var_O2,
+                "y_mean": y_mean.tolist(),
+                "y_std": y_std.tolist(),
                 "feature_cols": feature_cols,
                 "target_cols": target_cols,
             }, ckpt_path)
@@ -513,7 +531,7 @@ def train(args):
         model.load_state_dict(ckpt["model_state_dict"])
         logger.info(f"Loaded best model from epoch {ckpt['epoch']}")
 
-    metrics = calculate_metrics(model, X_te_s, y_te, device)
+    metrics = calculate_metrics(model, X_te_s, y_te, y_mean_t, y_std_t, device)
     logger.info(f"  RMSE  OutletT : {metrics['rmse_T']:.4f} °C")
     logger.info(f"  RMSE  ExcessO2: {metrics['rmse_O2']:.4f} %")
     logger.info(f"  MAE   OutletT : {metrics['mae_T']:.4f} °C")
