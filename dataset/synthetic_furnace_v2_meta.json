@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-25T08:56:20.248794",
+  "generated_at": "2026-02-25T02:55:21.541493",
   "n_samples": 500000,
   "perturb_sigma": 0.5,
   "noise_T": 0.5,
@@ -7,12 +7,12 @@
   "seed": 42,
   "checkpoint": "checkpoints_v2/best_pinn_v2.pth",
   "real_data": "cleaned_furnace_data.csv",
-  "theta_eff": 0.44522392749786377,
-  "afr_stoich": 14.696516990661621,
+  "theta_eff": 0.6796502470970154,
+  "afr_stoich": 17.467676162719727,
   "stats": {
-    "outlet_T_mean": 147.37542724609375,
-    "outlet_T_std": 0.5004122257232666,
-    "excess_O2_mean": 3.315398693084717,
-    "excess_O2_std": 0.04999286308884621
+    "outlet_T_mean": 323.5672607421875,
+    "outlet_T_std": 5.619157314300537,
+    "excess_O2_mean": 3.7110023498535156,
+    "excess_O2_std": 0.9322088956832886
   }
 }
