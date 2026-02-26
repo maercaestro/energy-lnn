@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-02-25T17:49:01.740254",
+  "n_per_scenario": 25000,
+  "total_edge_case_rows": 150000,
+  "total_real_rows": 470676,
+  "total_merged": 620676,
+  "scenarios": [
+    "S1_flame_out",
+    "S2_air_leak",
+    "S3_tube_rupture",
+    "S4_positive_pressure",
+    "S5_fuel_trip",
+    "S6_fuel_contamination"
+  ],
+  "ar1_phi": {
+    "InletT": 0.7647,
+    "InletFlow": 0.8335,
+    "FGFlow": 0.7377,
+    "DraftP": 0.8838,
+    "FGPressure": 0.8174,
+    "Bridgewall": 0.7789,
+    "OP_Damper": 0.9817,
+    "OutletT": 0.8946,
+    "ExcessO2": 0.9011
+  },
+  "ar1_sigma": {
+    "InletT": 0.1804,
+    "InletFlow": 0.7544,
+    "FGFlow": 6.2122,
+    "DraftP": 0.0935,
+    "FGPressure": 0.0078,
+    "Bridgewall": 1.4062,
+    "OP_Damper": 0.0856,
+    "OutletT": 0.1277,
+    "ExcessO2": 0.0797
+  },
+  "noise_type": "AR(1) coloured noise",
+  "confidence_thresholds": {
+    "high": "mahal <= 3",
+    "medium": "3 < mahal <= 5",
+    "low": "mahal > 5"
+  },
+  "files": {
+    "full_edge_cases": "edge_cases_v2.csv",
+    "eblnn_edge_cases": "edge_cases_v2_eblnn.csv",
+    "eblnn_real": "real_furnace_eblnn.csv",
+    "eblnn_merged": "merged_eblnn_dataset.csv"
+  }
+}
