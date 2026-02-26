@@ -68,4 +68,28 @@ wandb/
 *.bak
 *.swp
 *~
+
+# ── Large data files ──────────────────────────────────────────────
 dataset/DataCollected.csv
+dataset/cleaned_furnace_data.csv
+dataset/synthetic_furnace_v2.csv
+dataset/synthetic_minute_data.csv
+dataset/synthetic_minute_data_clean.csv
+dataset/edge_cases_v2.csv
+dataset/edge_cases_v2_eblnn.csv
+dataset/real_furnace_eblnn.csv
+dataset/merged_eblnn_dataset.csv
+dataset/final_data.csv
+
+# ── Model checkpoints & training outputs ─────────────────────────
+dataset/checkpoints_v2/
+*.pth
+*.pkl
+
+# ── Ablation results (regenerated on each run) ──────────────────
+eblnn/results/ablation/
+eblnn/data/
+
+# ── Plots (regenerated) ─────────────────────────────────────────
+dataset/plots_edge_cases/
+eblnn/results/plots/

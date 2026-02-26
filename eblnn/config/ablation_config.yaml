@@ -1,0 +1,168 @@
+# ═══════════════════════════════════════════════════════════════════════
+# Ablation Study Configuration — Generative EB-LNN
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Each experiment varies ONE axis from the baseline (A2_real_plus_edge).
+# The runner merges baseline defaults with per-experiment overrides.
+#
+# Axes:
+#   A  Data composition        (which data sources)
+#   B  Edge-case volume        (how much edge-case data)
+#   C  Scenario contribution   (which failure modes)
+#   D  Architecture            (CfC / EBM head sizes)
+#   E  Sequence length         (temporal window)
+#   F  CD balance              (alpha = physics vs contrastive divergence)
+# ═══════════════════════════════════════════════════════════════════════
+
+# ── Data file names (resolved relative to --data_dir) ────────────────
+data_files:
+  real: "real_furnace_eblnn.csv"
+  edge: "edge_cases_v2_eblnn.csv"
+
+# ── Baseline (A2 — Real + all edge cases) ────────────────────────────
+baseline:
+  # Data
+  use_real: true
+  use_edge: true
+  scenarios: null            # null = all 6 scenarios
+  confidence_filter: null    # null = all confidence levels
+  edge_fraction: 1.0         # 1.0 = 100 % of edge cases
+
+  # Sequences
+  seq_len: 30
+  stride: 30                 # non-overlapping windows for real data
+
+  # Model
+  hidden_size: 128
+  ebm_hidden_dims: [128, 64]
+
+  # Training
+  epochs: 200
+  learning_rate: 0.001
+  alpha: 1.0                # weight of L_CD in the joint loss
+  l2_reg: 0.1
+  energy_clamp: 20.0
+  margin: 0.0
+  batch_size: 64
+  patience: 20
+  min_delta: 0.0001
+  early_stopping: true
+
+  # Langevin sampler
+  n_steps: 20
+  step_size: 0.01
+  noise_scale: 0.005
+  clip_x: 3.0
+
+  # Replay buffer
+  buffer_capacity: 10000
+  buffer_prob: 0.95
+
+  # Splits
+  test_size: 0.2
+  val_size: 0.1
+  seed: 42
+
+
+# ── Experiments (overrides only — merged onto baseline) ──────────────
+experiments:
+
+  # ────────────────────────────────────────────────────────────────────
+  # A — Data Composition
+  # ────────────────────────────────────────────────────────────────────
+  A1_real_only:
+    description: "Real data only — no edge cases"
+    use_edge: false
+
+  A2_baseline:
+    description: "Real + all edge cases (BASELINE)"
+    # no overrides — pure baseline
+
+  A3_edge_only:
+    description: "Edge cases only — no real data"
+    use_real: false
+
+  # ────────────────────────────────────────────────────────────────────
+  # B — Edge-Case Volume
+  # ────────────────────────────────────────────────────────────────────
+  B1_edge_10pct:
+    description: "Real + 10 % edge cases"
+    edge_fraction: 0.1
+
+  B2_edge_25pct:
+    description: "Real + 25 % edge cases"
+    edge_fraction: 0.25
+
+  B3_edge_50pct:
+    description: "Real + 50 % edge cases"
+    edge_fraction: 0.5
+
+  B4_edge_200pct:
+    description: "Real + 200 % edge cases (2× oversampled)"
+    edge_fraction: 2.0
+
+  # ────────────────────────────────────────────────────────────────────
+  # C — Scenario Contribution (single-scenario ablation)
+  # ────────────────────────────────────────────────────────────────────
+  C1_flame_out:
+    description: "Real + S1 flame-out only"
+    scenarios: ["S1_flame_out"]
+
+  C2_air_leak:
+    description: "Real + S2 air leak only"
+    scenarios: ["S2_air_leak"]
+
+  C3_tube_rupture:
+    description: "Real + S3 tube rupture only"
+    scenarios: ["S3_tube_rupture"]
+
+  C4_positive_pressure:
+    description: "Real + S4 positive pressure only"
+    scenarios: ["S4_positive_pressure"]
+
+  C5_fuel_trip:
+    description: "Real + S5 fuel trip only"
+    scenarios: ["S5_fuel_trip"]
+
+  C6_fuel_contamination:
+    description: "Real + S6 fuel contamination only"
+    scenarios: ["S6_fuel_contamination"]
+
+  # ────────────────────────────────────────────────────────────────────
+  # D — Architecture
+  # ────────────────────────────────────────────────────────────────────
+  D1_hidden_64:
+    description: "Smaller CfC backbone (hidden=64)"
+    hidden_size: 64
+
+  D2_hidden_256:
+    description: "Larger CfC backbone (hidden=256)"
+    hidden_size: 256
+
+  D3_ebm_small:
+    description: "Smaller EBM head [64, 32]"
+    ebm_hidden_dims: [64, 32]
+
+  # ────────────────────────────────────────────────────────────────────
+  # E — Sequence Length
+  # ────────────────────────────────────────────────────────────────────
+  E1_seq15:
+    description: "Shorter sequences (15 timesteps)"
+    seq_len: 15
+    stride: 15
+
+  E2_seq60:
+    description: "Longer sequences (60 timesteps)"
+    seq_len: 60
+    stride: 60
+
+  # ────────────────────────────────────────────────────────────────────
+  # F — Alpha (Physics vs Contrastive Divergence weight)
+  # ────────────────────────────────────────────────────────────────────
+  F1_alpha_01:
+    description: "Alpha = 0.1 (physics-dominant)"
+    alpha: 0.1
+
+  F2_alpha_5:
+    description: "Alpha = 5.0 (CD-dominant)"
+    alpha: 5.0
