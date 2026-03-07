@@ -1,0 +1,3264 @@
+nohup: ignoring input
+
+═════════════════════════════════════════════════════════════════
+  ABLATION BATCH  —  20 experiments
+  Started : 2026-02-26 04:21:24
+  W&B     : ON
+═════════════════════════════════════════════════════════════════
+
+   1. A1_real_only
+   2. A2_baseline
+   3. A3_edge_only
+   4. B1_edge_10pct
+   5. B2_edge_25pct
+   6. B3_edge_50pct
+   7. B4_edge_200pct
+   8. C1_flame_out
+   9. C2_air_leak
+  10. C3_tube_rupture
+  11. C4_positive_pressure
+  12. C5_fuel_trip
+  13. C6_fuel_contamination
+  14. D1_hidden_64
+  15. D2_hidden_256
+  16. D3_ebm_small
+  17. E1_seq15
+  18. E2_seq60
+  19. F1_alpha_01
+  20. F2_alpha_5
+
+
+─────────────────────────────────────────────────────────────────
+  [1/20]  A1_real_only  (started 04:21:24)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260226_042128-gkuaxbxx
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run A1_real_only
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/gkuaxbxx
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: A1_real_only
+  Real data only — no edge cases
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : False
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A1_real_only
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Total     : 15,689 sequences  (seq_len=30)
+Split     : 12,551 train / 1,569 val / 1,569 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -3.8401 (phys 0.4144 cd -4.2544) | Val -4.6178 | E+=-4.249 E-=4.250 gap=8.499
+  -> Best model saved (val_phys=0.3786)
+  -> Best model saved (val_phys=0.3609)
+  -> Best model saved (val_phys=0.3350)
+  -> Best model saved (val_phys=0.3273)
+  -> Best model saved (val_phys=0.3145)
+  -> Best model saved (val_phys=0.3053)
+  -> Best model saved (val_phys=0.2985)
+Epoch   10/200 | Train -4.7228 (phys 0.2759 cd -4.9987) | Val -4.6915 | E+=-4.998 E-=4.999 gap=9.997
+  -> Best model saved (val_phys=0.2890)
+  -> Best model saved (val_phys=0.2885)
+  -> Best model saved (val_phys=0.2714)
+  -> Best model saved (val_phys=0.2696)
+  -> Best model saved (val_phys=0.2673)
+  -> Best model saved (val_phys=0.2569)
+Epoch   20/200 | Train -4.7698 (phys 0.2296 cd -4.9995) | Val -4.7493 | E+=-5.000 E-=4.999 gap=9.999
+  -> Best model saved (val_phys=0.2496)
+  -> Best model saved (val_phys=0.2480)
+  -> Best model saved (val_phys=0.2431)
+  -> Best model saved (val_phys=0.2421)
+  -> Best model saved (val_phys=0.2408)
+  -> Best model saved (val_phys=0.2398)
+  -> Best model saved (val_phys=0.2392)
+  -> Best model saved (val_phys=0.2270)
+Epoch   30/200 | Train -4.8039 (phys 0.1957 cd -4.9996) | Val -4.7745 | E+=-4.999 E-=4.999 gap=9.999
+  -> Best model saved (val_phys=0.2249)
+  -> Best model saved (val_phys=0.2144)
+Epoch   40/200 | Train -4.8236 (phys 0.1761 cd -4.9997) | Val -4.7854 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.2135)
+  -> Best model saved (val_phys=0.2039)
+Epoch   50/200 | Train -4.8337 (phys 0.1660 cd -4.9997) | Val -4.7819 | E+=-4.999 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.2012)
+  -> Best model saved (val_phys=0.1974)
+Epoch   60/200 | Train -4.8513 (phys 0.1483 cd -4.9996) | Val -4.8007 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1906)
+  -> Best model saved (val_phys=0.1897)
+  -> Best model saved (val_phys=0.1876)
+Epoch   70/200 | Train -4.8562 (phys 0.1436 cd -4.9998) | Val -4.8010 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.1873)
+  -> Best model saved (val_phys=0.1863)
+Epoch   80/200 | Train -4.8685 (phys 0.1313 cd -4.9998) | Val -4.8008 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1795)
+Epoch   90/200 | Train -4.8683 (phys 0.1311 cd -4.9994) | Val -4.8037 | E+=-5.000 E-=4.999 gap=9.999
+Epoch  100/200 | Train -4.8791 (phys 0.1207 cd -4.9998) | Val -4.8171 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.1757)
+Epoch  110/200 | Train -4.8771 (phys 0.1228 cd -4.9999) | Val -4.8099 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  120/200 | Train -4.8873 (phys 0.1125 cd -4.9998) | Val -4.8127 | E+=-5.000 E-=5.000 gap=9.999
+
+Early stopping at epoch 125 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A1_real_only/models/last_model.pth
+Best val loss: 0.1757 at epoch 105
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2265 °C
+  Excess O2   RMSE : 0.4767 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A1_real_only/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A1_real_only/history.npz
+wandb: updating run metadata
+wandb: uploading history steps 124-126, summary, console lines 106-117
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▂▂▂▂▂▃▃▃▃▄▄▄▄▄▄▄▅▅▅▅▅▆▆▆▆▆▆▆▇▇▇█████
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▅▄▄▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁▄▇▆▇█▇▇█▇█████▇█████████▇██████████████
+wandb:    train/e_neg ▁███████████████████████████████████████
+wandb:    train/e_pos █▃▃▂▁▂▁▂▁▂▂▁▂▁▂▂▁▁▂▁▁▁▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁
+wandb:     train/loss ██▇▇▆▆▆▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁
+wandb:  train/physics █▆▅▅▅▄▄▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▁▁▂▁▁▁▁▁▁▁▁▁
+wandb:         val/cd ▇█▄▃▂▂▂▂▂▂▁▄▃▂▁▃▂▃▃▂▂▂▂▁▃▁▁▂▂▂▂▂▁▁▂▃▅▄▂▂
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 105
+wandb: best_val_phys_loss 0.17574
+wandb:      early_stopped True
+wandb:              epoch 125
+wandb:      stopped_epoch 125
+wandb:       test_rmse_o2 0.4767
+wandb:     test_rmse_temp 0.22653
+wandb:           train/cd -4.99986
+wandb:       train/cd_gap 9.9998
+wandb:        train/e_neg 4.99986
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run A1_real_only at: https://wandb.ai/maercaestro/eblnn-ablation/runs/gkuaxbxx
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260226_042128-gkuaxbxx/logs
+
+⏱  Total wall time: 36577s
+Experiment complete.
+
+
+✅  A1_real_only  (36583s)
+
+─────────────────────────────────────────────────────────────────
+  [2/20]  A2_baseline  (started 14:31:07)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260226_143111-jkboiefj
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run A2_baseline
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/jkboiefj
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: A2_baseline
+  Real + all edge cases (BASELINE)
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A2_baseline
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Edge cases: 150,000 rows  →  4,998 sequences  (block=30)
+Total     : 20,687 sequences  (seq_len=30)
+Split     : 16,549 train / 2,069 val / 2,069 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.3442 (phys 0.0833 cd -4.4274) | Val -4.9556 | E+=-4.404 E-=4.422 gap=8.826
+  -> Best model saved (val_phys=0.0424)
+  -> Best model saved (val_phys=0.0314)
+  -> Best model saved (val_phys=0.0288)
+  -> Best model saved (val_phys=0.0274)
+  -> Best model saved (val_phys=0.0272)
+  -> Best model saved (val_phys=0.0247)
+Epoch   10/200 | Train -4.9726 (phys 0.0269 cd -4.9995) | Val -4.9751 | E+=-4.999 E-=4.999 gap=9.999
+  -> Best model saved (val_phys=0.0246)
+  -> Best model saved (val_phys=0.0235)
+Epoch   20/200 | Train -4.9772 (phys 0.0227 cd -4.9998) | Val -4.9755 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0227)
+Epoch   30/200 | Train -4.9777 (phys 0.0221 cd -4.9998) | Val -4.9772 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0220)
+Epoch   40/200 | Train -4.9785 (phys 0.0215 cd -4.9999) | Val -4.9779 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0217)
+  -> Best model saved (val_phys=0.0215)
+  -> Best model saved (val_phys=0.0212)
+Epoch   50/200 | Train -4.9781 (phys 0.0218 cd -4.9999) | Val -4.9734 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0207)
+Epoch   60/200 | Train -4.9803 (phys 0.0197 cd -5.0000) | Val -4.9795 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0205)
+  -> Best model saved (val_phys=0.0203)
+Epoch   70/200 | Train -4.9807 (phys 0.0192 cd -4.9999) | Val -4.9788 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0201)
+Epoch   80/200 | Train -4.9813 (phys 0.0186 cd -5.0000) | Val -4.9802 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0198)
+Epoch   90/200 | Train -4.9813 (phys 0.0186 cd -5.0000) | Val -4.9792 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0196)
+Epoch  100/200 | Train -4.9823 (phys 0.0177 cd -5.0000) | Val -4.9797 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  110/200 | Train -4.9825 (phys 0.0175 cd -5.0000) | Val -4.9807 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0192)
+Epoch  120/200 | Train -4.9824 (phys 0.0176 cd -5.0000) | Val -4.9781 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  130/200 | Train -4.9828 (phys 0.0172 cd -5.0000) | Val -4.9803 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 130 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A2_baseline/models/last_model.pth
+Best val loss: 0.0192 at epoch 110
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2059 °C
+  Excess O2   RMSE : 0.7063 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A2_baseline/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A2_baseline/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▂▂▂▂▂▃▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▆▆▆▇▇▇▇▇▇▇█████
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁▄▆▅▆▅▇▇█▇█████████▇████████████████████
+wandb:    train/e_neg ▁▅▆▇▆▇█▇█▇██████████████████████████████
+wandb:    train/e_pos ▂▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss ▇▆█▅▆▅▅▄▄▄▄▄▄▄▄▃▄▃▃▄▂▂▃▂▂▂▂▂▁▂▁▂▁▁▁▁▂▁▁▁
+wandb:  train/physics █▆▄▄▄▃▃▃▃▅▄▂▂▃▂▂▂▂▂▂▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         val/cd █▄▃▃▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 110
+wandb: best_val_phys_loss 0.01921
+wandb:      early_stopped True
+wandb:              epoch 130
+wandb:      stopped_epoch 130
+wandb:       test_rmse_o2 0.70629
+wandb:     test_rmse_temp 0.20592
+wandb:           train/cd -4.99998
+wandb:       train/cd_gap 9.99995
+wandb:        train/e_neg 4.99999
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run A2_baseline at: https://wandb.ai/maercaestro/eblnn-ablation/runs/jkboiefj
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260226_143111-jkboiefj/logs
+
+⏱  Total wall time: 47651s
+Experiment complete.
+
+
+✅  A2_baseline  (47656s)
+
+─────────────────────────────────────────────────────────────────
+  [3/20]  A3_edge_only  (started 03:45:24)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run d456awoy
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260227_034527-d456awoy
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run A3_edge_only
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/d456awoy
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: A3_edge_only
+  Edge cases only — no real data
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : False
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A3_edge_only
+═════════════════════════════════════════════════════════════════
+
+Edge cases: 150,000 rows  →  4,998 sequences  (block=30)
+Total     : 4,998 sequences  (seq_len=30)
+Split     : 3,998 train / 500 val / 500 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -2.0975 (phys 0.1988 cd -2.2963) | Val -4.7581 | E+=-2.327 E-=2.248 gap=4.575
+  -> Best model saved (val_phys=0.1578)
+  -> Best model saved (val_phys=0.0708)
+  -> Best model saved (val_phys=0.0505)
+  -> Best model saved (val_phys=0.0456)
+  -> Best model saved (val_phys=0.0419)
+  -> Best model saved (val_phys=0.0397)
+  -> Best model saved (val_phys=0.0381)
+  -> Best model saved (val_phys=0.0371)
+Epoch   10/200 | Train -4.9618 (phys 0.0358 cd -4.9976) | Val -4.9602 | E+=-4.996 E-=4.998 gap=9.994
+  -> Best model saved (val_phys=0.0366)
+  -> Best model saved (val_phys=0.0364)
+  -> Best model saved (val_phys=0.0360)
+  -> Best model saved (val_phys=0.0357)
+  -> Best model saved (val_phys=0.0356)
+  -> Best model saved (val_phys=0.0352)
+Epoch   20/200 | Train -4.9643 (phys 0.0341 cd -4.9984) | Val -4.9612 | E+=-4.999 E-=4.998 gap=9.996
+  -> Best model saved (val_phys=0.0349)
+  -> Best model saved (val_phys=0.0346)
+  -> Best model saved (val_phys=0.0343)
+Epoch   30/200 | Train -4.9666 (phys 0.0324 cd -4.9990) | Val -4.9655 | E+=-4.998 E-=4.999 gap=9.997
+  -> Best model saved (val_phys=0.0342)
+Epoch   40/200 | Train -4.9678 (phys 0.0320 cd -4.9998) | Val -4.9658 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0340)
+  -> Best model saved (val_phys=0.0336)
+  -> Best model saved (val_phys=0.0335)
+  -> Best model saved (val_phys=0.0333)
+Epoch   50/200 | Train -4.9684 (phys 0.0314 cd -4.9998) | Val -4.9630 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0330)
+Epoch   60/200 | Train -4.9691 (phys 0.0309 cd -4.9999) | Val -4.9667 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0326)
+  -> Best model saved (val_phys=0.0325)
+Epoch   70/200 | Train -4.9692 (phys 0.0307 cd -4.9999) | Val -4.9672 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0322)
+Epoch   80/200 | Train -4.9697 (phys 0.0302 cd -4.9999) | Val -4.9669 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0320)
+Epoch   90/200 | Train -4.9698 (phys 0.0302 cd -5.0000) | Val -4.9672 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  100/200 | Train -4.9695 (phys 0.0304 cd -4.9999) | Val -4.9633 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 109 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A3_edge_only/models/last_model.pth
+Best val loss: 0.0320 at epoch 89
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.1721 °C
+  Excess O2   RMSE : 1.1906 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A3_edge_only/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/A3_edge_only/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▂▂▂▂▂▂▂▃▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▇▇▇▇████
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▇▄▂▂▂▁▂▁▂▂▃▂▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁▆▇▇▇▇▇▇▇▇██▇█▇█████████▆███████████████
+wandb:    train/e_neg ▁▃▅▆▆█▆█▆▇█▇▆▇▇▇██▆▇██▇▅█▇██▇███████████
+wandb:    train/e_pos █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▃▂▂▂▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  train/physics █▄▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         val/cd █▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 89
+wandb: best_val_phys_loss 0.03198
+wandb:      early_stopped True
+wandb:              epoch 109
+wandb:      stopped_epoch 109
+wandb:       test_rmse_o2 1.19055
+wandb:     test_rmse_temp 0.17206
+wandb:           train/cd -4.99996
+wandb:       train/cd_gap 9.99973
+wandb:        train/e_neg 4.99975
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run A3_edge_only at: https://wandb.ai/maercaestro/eblnn-ablation/runs/d456awoy
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260227_034527-d456awoy/logs
+
+⏱  Total wall time: 9993s
+Experiment complete.
+
+
+✅  A3_edge_only  (9999s)
+
+─────────────────────────────────────────────────────────────────
+  [4/20]  B1_edge_10pct  (started 06:32:02)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run 7hec6aup
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260227_063206-7hec6aup
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run B1_edge_10pct
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/7hec6aup
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: B1_edge_10pct
+  Real + 10 % edge cases
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 0.1
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B1_edge_10pct
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Edge cases: 15,000 rows  →  497 sequences  (block=30)
+Total     : 16,186 sequences  (seq_len=30)
+Split     : 12,948 train / 1,619 val / 1,619 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -3.9979 (phys 0.2395 cd -4.2374) | Val -4.8458 | E+=-4.284 E-=4.268 gap=8.552
+  -> Best model saved (val_phys=0.1504)
+  -> Best model saved (val_phys=0.1138)
+  -> Best model saved (val_phys=0.1065)
+  -> Best model saved (val_phys=0.0943)
+  -> Best model saved (val_phys=0.0907)
+  -> Best model saved (val_phys=0.0866)
+Epoch   10/200 | Train -4.9088 (phys 0.0903 cd -4.9991) | Val -4.9142 | E+=-4.999 E-=4.999 gap=9.998
+  -> Best model saved (val_phys=0.0848)
+  -> Best model saved (val_phys=0.0784)
+  -> Best model saved (val_phys=0.0765)
+  -> Best model saved (val_phys=0.0720)
+Epoch   20/200 | Train -4.9239 (phys 0.0758 cd -4.9997) | Val -4.9227 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0710)
+  -> Best model saved (val_phys=0.0695)
+  -> Best model saved (val_phys=0.0685)
+Epoch   30/200 | Train -4.9333 (phys 0.0664 cd -4.9997) | Val -4.9334 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0663)
+  -> Best model saved (val_phys=0.0650)
+  -> Best model saved (val_phys=0.0643)
+  -> Best model saved (val_phys=0.0622)
+Epoch   40/200 | Train -4.9392 (phys 0.0606 cd -4.9998) | Val -4.9326 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0602)
+Epoch   50/200 | Train -4.9423 (phys 0.0575 cd -4.9999) | Val -4.9320 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0582)
+Epoch   60/200 | Train -4.9481 (phys 0.0518 cd -4.9999) | Val -4.9360 | E+=-5.000 E-=5.000 gap=10.000
+Epoch   70/200 | Train -4.9501 (phys 0.0499 cd -4.9999) | Val -4.9424 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0575)
+  -> Best model saved (val_phys=0.0562)
+Epoch   80/200 | Train -4.9530 (phys 0.0469 cd -4.9999) | Val -4.9422 | E+=-5.000 E-=5.000 gap=10.000
+Epoch   90/200 | Train -4.9546 (phys 0.0454 cd -4.9999) | Val -4.9439 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0559)
+  -> Best model saved (val_phys=0.0547)
+Epoch  100/200 | Train -4.9576 (phys 0.0424 cd -4.9999) | Val -4.9434 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  110/200 | Train -4.9577 (phys 0.0422 cd -4.9999) | Val -4.9424 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0544)
+Epoch  120/200 | Train -4.9614 (phys 0.0384 cd -4.9998) | Val -4.9424 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  130/200 | Train -4.9630 (phys 0.0369 cd -4.9999) | Val -4.9457 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0541)
+  -> Best model saved (val_phys=0.0538)
+  -> Best model saved (val_phys=0.0532)
+Epoch  140/200 | Train -4.9634 (phys 0.0365 cd -5.0000) | Val -4.9434 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  150/200 | Train -4.9620 (phys 0.0379 cd -4.9999) | Val -4.9421 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 153 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B1_edge_10pct/models/last_model.pth
+Best val loss: 0.0532 at epoch 133
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2952 °C
+  Excess O2   RMSE : 0.5341 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B1_edge_10pct/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B1_edge_10pct/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▂▂▂▂▂▂▃▃▃▃▃▄▄▄▄▄▄▄▄▅▅▅▅▅▅▅▆▆▆▇▇▇▇▇██
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁▂▆▆▆▇███▇██▇███████████████████████████
+wandb:    train/e_neg ▁▇▇▆▇█▇▇▇██▇████████████████████████████
+wandb:    train/e_pos █▅▃▄▂▂▄▂▁▃▁▁▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▁▁▁▁▁▁▁
+wandb:     train/loss █▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  train/physics █▅▅▄▄▃▃▃▃▃▃▄▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁
+wandb:         val/cd █▄▂▂▂▂▁▁▁▁▂▁▁▂▁▁▁▁▂▁▁▁▁▁▁▁▂▁▁▁▁▁▁▂▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 133
+wandb: best_val_phys_loss 0.05324
+wandb:      early_stopped True
+wandb:              epoch 153
+wandb:      stopped_epoch 153
+wandb:       test_rmse_o2 0.53406
+wandb:     test_rmse_temp 0.29522
+wandb:           train/cd -4.99996
+wandb:       train/cd_gap 9.9999
+wandb:        train/e_neg 4.99995
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run B1_edge_10pct at: https://wandb.ai/maercaestro/eblnn-ablation/runs/7hec6aup
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260227_063206-7hec6aup/logs
+
+⏱  Total wall time: 46172s
+Experiment complete.
+
+
+✅  B1_edge_10pct  (46177s)
+
+─────────────────────────────────────────────────────────────────
+  [5/20]  B2_edge_25pct  (started 19:21:40)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run njhtv2vf
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260227_192143-njhtv2vf
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run B2_edge_25pct
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/njhtv2vf
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: B2_edge_25pct
+  Real + 25 % edge cases
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 0.25
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B2_edge_25pct
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Edge cases: 37,500 rows  →  1,247 sequences  (block=30)
+Total     : 16,936 sequences  (seq_len=30)
+Split     : 13,548 train / 1,694 val / 1,694 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.1368 (phys 0.1393 cd -4.2761) | Val -4.9088 | E+=-4.257 E-=4.272 gap=8.530
+  -> Best model saved (val_phys=0.0877)
+  -> Best model saved (val_phys=0.0676)
+  -> Best model saved (val_phys=0.0663)
+  -> Best model saved (val_phys=0.0642)
+  -> Best model saved (val_phys=0.0641)
+  -> Best model saved (val_phys=0.0587)
+  -> Best model saved (val_phys=0.0545)
+  -> Best model saved (val_phys=0.0498)
+Epoch   10/200 | Train -4.9491 (phys 0.0498 cd -4.9989) | Val -4.9427 | E+=-4.999 E-=4.999 gap=9.998
+  -> Best model saved (val_phys=0.0466)
+  -> Best model saved (val_phys=0.0463)
+  -> Best model saved (val_phys=0.0462)
+Epoch   20/200 | Train -4.9570 (phys 0.0426 cd -4.9996) | Val -4.9576 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0422)
+  -> Best model saved (val_phys=0.0419)
+  -> Best model saved (val_phys=0.0408)
+Epoch   30/200 | Train -4.9600 (phys 0.0399 cd -4.9999) | Val -4.9490 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0400)
+  -> Best model saved (val_phys=0.0385)
+Epoch   40/200 | Train -4.9634 (phys 0.0365 cd -4.9999) | Val -4.9577 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0382)
+  -> Best model saved (val_phys=0.0376)
+  -> Best model saved (val_phys=0.0371)
+Epoch   50/200 | Train -4.9658 (phys 0.0342 cd -4.9999) | Val -4.9628 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0362)
+Epoch   60/200 | Train -4.9670 (phys 0.0329 cd -4.9999) | Val -4.9644 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0355)
+  -> Best model saved (val_phys=0.0344)
+Epoch   70/200 | Train -4.9687 (phys 0.0313 cd -4.9999) | Val -4.9657 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0342)
+  -> Best model saved (val_phys=0.0341)
+Epoch   80/200 | Train -4.9698 (phys 0.0302 cd -5.0000) | Val -4.9643 | E+=-5.000 E-=5.000 gap=10.000
+Epoch   90/200 | Train -4.9712 (phys 0.0288 cd -5.0000) | Val -4.9647 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 93 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B2_edge_25pct/models/last_model.pth
+Best val loss: 0.0341 at epoch 73
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2380 °C
+  Excess O2   RMSE : 0.5814 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B2_edge_25pct/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B2_edge_25pct/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▁▂▂▂▂▂▂▂▃▃▃▃▃▄▄▄▄▄▄▄▅▅▅▅▆▆▆▆▇▇▇▇▇███
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▅▅▃▂▂▂▂▂▂▁▁▄▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁███████████████████████████████████████
+wandb:    train/e_neg ▁███████████████████████████████████████
+wandb:    train/e_pos █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▇▆▆▅▅▅▄▄▄▃▄▃▃▃▃▃▂▂▂▂▂▂▃▂▂▂▂▂▂▂▁▁▂▁▁▁▁▂▁
+wandb:  train/physics █▇▇▇▅▅▆▆▅▆▅▅▄▅▄▄▄▅▃▄▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▁▂▁▁
+wandb:         val/cd █▂▆▂▂▃▂▂▂▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 73
+wandb: best_val_phys_loss 0.03408
+wandb:      early_stopped True
+wandb:              epoch 93
+wandb:      stopped_epoch 93
+wandb:       test_rmse_o2 0.58139
+wandb:     test_rmse_temp 0.23799
+wandb:           train/cd -4.99996
+wandb:       train/cd_gap 9.99988
+wandb:        train/e_neg 4.99991
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run B2_edge_25pct at: https://wandb.ai/maercaestro/eblnn-ablation/runs/njhtv2vf
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260227_192143-njhtv2vf/logs
+
+⏱  Total wall time: 27981s
+Experiment complete.
+
+
+✅  B2_edge_25pct  (27987s)
+
+─────────────────────────────────────────────────────────────────
+  [6/20]  B3_edge_50pct  (started 03:08:07)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260228_030810-279g1lid
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run B3_edge_50pct
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/279g1lid
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: B3_edge_50pct
+  Real + 50 % edge cases
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 0.5
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B3_edge_50pct
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Edge cases: 75,000 rows  →  2,497 sequences  (block=30)
+Total     : 18,186 sequences  (seq_len=30)
+Split     : 14,548 train / 1,819 val / 1,819 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.3274 (phys 0.1049 cd -4.4323) | Val -4.9444 | E+=-4.411 E-=4.424 gap=8.835
+  -> Best model saved (val_phys=0.0503)
+  -> Best model saved (val_phys=0.0411)
+  -> Best model saved (val_phys=0.0394)
+  -> Best model saved (val_phys=0.0337)
+  -> Best model saved (val_phys=0.0324)
+Epoch   10/200 | Train -4.9675 (phys 0.0321 cd -4.9996) | Val -4.9681 | E+=-4.999 E-=4.999 gap=9.999
+  -> Best model saved (val_phys=0.0314)
+  -> Best model saved (val_phys=0.0295)
+  -> Best model saved (val_phys=0.0293)
+Epoch   20/200 | Train -4.9686 (phys 0.0311 cd -4.9997) | Val -4.9702 | E+=-4.999 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0285)
+  -> Best model saved (val_phys=0.0272)
+Epoch   30/200 | Train -4.9724 (phys 0.0274 cd -4.9999) | Val -4.9724 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0269)
+  -> Best model saved (val_phys=0.0268)
+  -> Best model saved (val_phys=0.0265)
+  -> Best model saved (val_phys=0.0255)
+Epoch   40/200 | Train -4.9747 (phys 0.0252 cd -4.9999) | Val -4.9734 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0250)
+Epoch   50/200 | Train -4.9735 (phys 0.0264 cd -4.9999) | Val -4.9753 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0246)
+  -> Best model saved (val_phys=0.0245)
+Epoch   60/200 | Train -4.9766 (phys 0.0233 cd -4.9999) | Val -4.9747 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0242)
+  -> Best model saved (val_phys=0.0241)
+  -> Best model saved (val_phys=0.0238)
+Epoch   70/200 | Train -4.9774 (phys 0.0226 cd -5.0000) | Val -4.9762 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0237)
+  -> Best model saved (val_phys=0.0230)
+  -> Best model saved (val_phys=0.0228)
+Epoch   80/200 | Train -4.9785 (phys 0.0214 cd -5.0000) | Val -4.9768 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0223)
+Epoch   90/200 | Train -4.9758 (phys 0.0241 cd -5.0000) | Val -4.9764 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  100/200 | Train -4.9788 (phys 0.0211 cd -4.9999) | Val -4.9770 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0219)
+Epoch  110/200 | Train -4.9799 (phys 0.0201 cd -5.0000) | Val -4.9761 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0216)
+Epoch  120/200 | Train -4.9804 (phys 0.0194 cd -4.9998) | Val -4.9772 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  130/200 | Train -4.9800 (phys 0.0200 cd -5.0000) | Val -4.9778 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 133 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B3_edge_50pct/models/last_model.pth
+Best val loss: 0.0216 at epoch 113
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2914 °C
+  Excess O2   RMSE : 0.6683 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B3_edge_50pct/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B3_edge_50pct/history.npz
+wandb: updating run metadata
+wandb: uploading history steps 132-134, summary, console lines 100-111
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▂▂▂▂▂▃▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▅▆▆▆▆▆▆▆▇▇▇▇▇▇█
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▅▅▇▇▇███████▁███████████████████████████
+wandb:    train/e_neg ▅▅▇▇████▁▇██████████████████████████████
+wandb:    train/e_pos █▆▅▇▂▇▅█▄▃▁▂▃▃▂▂▂▂▂▁▁▂▂▂▁▂▂▁▁▂▁▁▂▂▁▁▃▁▁▂
+wandb:     train/loss █▇▄▄▅▃▃▃▃▃▃▃▂▂▂▂▂▂▃▂▂▂▂▂▂▂▂▁▂▂▁▁▂▁▁▁▁▁▁▁
+wandb:  train/physics █▆▄▄▃▃▃▂▃▃▃▂▂▂▂▂▂▂▂▁▁▂▁▁▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         val/cd █▂▁▂▅▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 113
+wandb: best_val_phys_loss 0.02159
+wandb:      early_stopped True
+wandb:              epoch 133
+wandb:      stopped_epoch 133
+wandb:       test_rmse_o2 0.66833
+wandb:     test_rmse_temp 0.29143
+wandb:           train/cd -4.99997
+wandb:       train/cd_gap 9.99994
+wandb:        train/e_neg 5.0
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run B3_edge_50pct at: https://wandb.ai/maercaestro/eblnn-ablation/runs/279g1lid
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260228_030810-279g1lid/logs
+
+⏱  Total wall time: 45071s
+Experiment complete.
+
+
+✅  B3_edge_50pct  (45076s)
+
+─────────────────────────────────────────────────────────────────
+  [7/20]  B4_edge_200pct  (started 15:39:23)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260228_153926-do15xyhn
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run B4_edge_200pct
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/do15xyhn
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: B4_edge_200pct
+  Real + 200 % edge cases (2× oversampled)
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 2.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B4_edge_200pct
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Edge cases: 300,000 rows  →  9,996 sequences  (block=30)
+Total     : 25,685 sequences  (seq_len=30)
+Split     : 20,548 train / 2,568 val / 2,569 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.4497 (phys 0.0717 cd -4.5214) | Val -4.9579 | E+=-4.506 E-=4.508 gap=9.014
+  -> Best model saved (val_phys=0.0391)
+  -> Best model saved (val_phys=0.0268)
+  -> Best model saved (val_phys=0.0229)
+  -> Best model saved (val_phys=0.0222)
+  -> Best model saved (val_phys=0.0213)
+Epoch   10/200 | Train -4.9753 (phys 0.0220 cd -4.9973) | Val -4.9776 | E+=-4.997 E-=4.998 gap=9.994
+  -> Best model saved (val_phys=0.0211)
+  -> Best model saved (val_phys=0.0210)
+  -> Best model saved (val_phys=0.0199)
+Epoch   20/200 | Train -4.9795 (phys 0.0204 cd -4.9999) | Val -4.9775 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0195)
+Epoch   30/200 | Train -4.9801 (phys 0.0198 cd -4.9999) | Val -4.9806 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0193)
+  -> Best model saved (val_phys=0.0192)
+  -> Best model saved (val_phys=0.0190)
+Epoch   40/200 | Train -4.9805 (phys 0.0195 cd -5.0000) | Val -4.9804 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0186)
+  -> Best model saved (val_phys=0.0184)
+Epoch   50/200 | Train -4.9810 (phys 0.0190 cd -5.0000) | Val -4.9814 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0182)
+Epoch   60/200 | Train -4.9816 (phys 0.0184 cd -5.0000) | Val -4.9818 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0181)
+Epoch   70/200 | Train -4.9821 (phys 0.0179 cd -5.0000) | Val -4.9815 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0179)
+  -> Best model saved (val_phys=0.0177)
+Epoch   80/200 | Train -4.9821 (phys 0.0178 cd -5.0000) | Val -4.9820 | E+=-5.000 E-=5.000 gap=10.000
+Epoch   90/200 | Train -4.9826 (phys 0.0174 cd -5.0000) | Val -4.9823 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 97 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B4_edge_200pct/models/last_model.pth
+Best val loss: 0.0177 at epoch 77
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2289 °C
+  Excess O2   RMSE : 0.8197 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B4_edge_200pct/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/B4_edge_200pct/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▁▂▂▂▂▂▂▂▃▃▃▄▄▄▄▄▄▅▅▅▅▅▆▆▆▆▆▆▇▇▇▇▇▇██
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁███████████████████████████████████████
+wandb:    train/e_neg ▁███████████████████████████████████████
+wandb:    train/e_pos █▄▂▂▃▇▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▅▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  train/physics █▂▂▂▂▁▂▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         val/cd █▂▂▂▂▃▁▂▃▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 77
+wandb: best_val_phys_loss 0.01775
+wandb:      early_stopped True
+wandb:              epoch 97
+wandb:      stopped_epoch 97
+wandb:       test_rmse_o2 0.81973
+wandb:     test_rmse_temp 0.22886
+wandb:           train/cd -4.99998
+wandb:       train/cd_gap 9.99999
+wandb:        train/e_neg 4.99998
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run B4_edge_200pct at: https://wandb.ai/maercaestro/eblnn-ablation/runs/do15xyhn
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260228_153926-do15xyhn/logs
+
+⏱  Total wall time: 43782s
+Experiment complete.
+
+
+✅  B4_edge_200pct  (43788s)
+
+─────────────────────────────────────────────────────────────────
+  [8/20]  C1_flame_out  (started 03:49:10)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260301_034913-jflauzui
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run C1_flame_out
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/jflauzui
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: C1_flame_out
+  Real + S1 flame-out only
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : ['S1_flame_out']
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C1_flame_out
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Scenario filter ['S1_flame_out']: 150,000 → 25,000 rows
+Edge cases: 25,000 rows  →  833 sequences  (block=30)
+Total     : 16,522 sequences  (seq_len=30)
+Split     : 13,217 train / 1,652 val / 1,653 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -3.9872 (phys 0.3278 cd -4.3150) | Val -4.7028 | E+=-4.258 E-=4.326 gap=8.584
+  -> Best model saved (val_phys=0.2931)
+  -> Best model saved (val_phys=0.2568)
+  -> Best model saved (val_phys=0.2564)
+  -> Best model saved (val_phys=0.2416)
+  -> Best model saved (val_phys=0.2322)
+  -> Best model saved (val_phys=0.2224)
+Epoch   10/200 | Train -4.7779 (phys 0.2206 cd -4.9985) | Val -4.7793 | E+=-4.997 E-=4.999 gap=9.996
+  -> Best model saved (val_phys=0.2202)
+  -> Best model saved (val_phys=0.2181)
+  -> Best model saved (val_phys=0.2153)
+  -> Best model saved (val_phys=0.2132)
+  -> Best model saved (val_phys=0.2065)
+  -> Best model saved (val_phys=0.2010)
+  -> Best model saved (val_phys=0.1925)
+Epoch   20/200 | Train -4.8101 (phys 0.1893 cd -4.9995) | Val -4.8107 | E+=-4.999 E-=4.999 gap=9.999
+  -> Best model saved (val_phys=0.1890)
+  -> Best model saved (val_phys=0.1824)
+  -> Best model saved (val_phys=0.1811)
+  -> Best model saved (val_phys=0.1794)
+  -> Best model saved (val_phys=0.1728)
+Epoch   30/200 | Train -4.8360 (phys 0.1638 cd -4.9998) | Val -4.8261 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1715)
+  -> Best model saved (val_phys=0.1691)
+  -> Best model saved (val_phys=0.1662)
+  -> Best model saved (val_phys=0.1626)
+  -> Best model saved (val_phys=0.1597)
+Epoch   40/200 | Train -4.8483 (phys 0.1514 cd -4.9997) | Val -4.8312 | E+=-5.000 E-=4.999 gap=9.999
+  -> Best model saved (val_phys=0.1553)
+  -> Best model saved (val_phys=0.1529)
+Epoch   50/200 | Train -4.8602 (phys 0.1379 cd -4.9981) | Val -4.8485 | E+=-4.998 E-=4.998 gap=9.997
+  -> Best model saved (val_phys=0.1511)
+  -> Best model saved (val_phys=0.1489)
+Epoch   60/200 | Train -4.8679 (phys 0.1319 cd -4.9998) | Val -4.8497 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1458)
+  -> Best model saved (val_phys=0.1454)
+  -> Best model saved (val_phys=0.1401)
+Epoch   70/200 | Train -4.8789 (phys 0.1209 cd -4.9999) | Val -4.8557 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1396)
+Epoch   80/200 | Train -4.8836 (phys 0.1163 cd -4.9999) | Val -4.8494 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1362)
+Epoch   90/200 | Train -4.8899 (phys 0.1100 cd -4.9999) | Val -4.8534 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1347)
+Epoch  100/200 | Train -4.8907 (phys 0.1092 cd -4.9999) | Val -4.8632 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1342)
+  -> Best model saved (val_phys=0.1341)
+  -> Best model saved (val_phys=0.1339)
+Epoch  110/200 | Train -4.8994 (phys 0.1005 cd -4.9999) | Val -4.8648 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  120/200 | Train -4.9043 (phys 0.0956 cd -4.9999) | Val -4.8601 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1336)
+  -> Best model saved (val_phys=0.1330)
+Epoch  130/200 | Train -4.9039 (phys 0.0961 cd -4.9999) | Val -4.8657 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1321)
+Epoch  140/200 | Train -4.9057 (phys 0.0942 cd -4.9999) | Val -4.8651 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  150/200 | Train -4.9085 (phys 0.0914 cd -4.9999) | Val -4.8719 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1275)
+Epoch  160/200 | Train -4.9111 (phys 0.0888 cd -4.9999) | Val -4.8653 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  170/200 | Train -4.9175 (phys 0.0824 cd -4.9999) | Val -4.8683 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 170 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C1_flame_out/models/last_model.pth
+Best val loss: 0.1275 at epoch 150
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2738 °C
+  Excess O2   RMSE : 0.4784 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C1_flame_out/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C1_flame_out/history.npz
+wandb: updating run metadata
+wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▂▂▂▂▂▂▂▂▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▆▇▇▇▇▇▇▇▇█
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd ▅▂▂▄▂▁▁▁▁█▁▁▁▂▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▆▆▇▇▇███▁███▅██████████▇████████████████
+wandb:    train/e_neg ▁▄▄▇▆▇█▇▇▃▅▇█▇▇█▇█▂▆█▇█▇█▇▇▇▇██▇▇▇█▇▇███
+wandb:    train/e_pos █▅▄▄▃▂▂▂▂▂▆▂▂▂▂▂▁▄▂▂▂▁▁▂▁▂▂▂▂▂▂▂▂▁▁▁▂▂▂▁
+wandb:     train/loss █▇▇▆▆▅▅▄▄▅▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁▂▁▁▂▁▁▁▁▁
+wandb:  train/physics █▆▅▅▅▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         val/cd ▅▆▃█▂▁▁▂▂▂▁▁▁▁▁▁▂▂▁▁▁▁▂▁▁▁▁▁▁▁▁▁▂▂▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 150
+wandb: best_val_phys_loss 0.12746
+wandb:      early_stopped True
+wandb:              epoch 170
+wandb:      stopped_epoch 170
+wandb:       test_rmse_o2 0.47835
+wandb:     test_rmse_temp 0.27382
+wandb:           train/cd -4.99994
+wandb:       train/cd_gap 9.99986
+wandb:        train/e_neg 4.99993
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run C1_flame_out at: https://wandb.ai/maercaestro/eblnn-ablation/runs/jflauzui
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260301_034913-jflauzui/logs
+
+⏱  Total wall time: 52390s
+Experiment complete.
+
+
+✅  C1_flame_out  (52395s)
+
+─────────────────────────────────────────────────────────────────
+  [9/20]  C2_air_leak  (started 18:22:25)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260301_182229-znibkmif
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run C2_air_leak
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/znibkmif
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: C2_air_leak
+  Real + S2 air leak only
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : ['S2_air_leak']
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C2_air_leak
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Scenario filter ['S2_air_leak']: 150,000 → 25,000 rows
+Edge cases: 25,000 rows  →  833 sequences  (block=30)
+Total     : 16,522 sequences  (seq_len=30)
+Split     : 13,217 train / 1,652 val / 1,653 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.2013 (phys 0.0896 cd -4.2909) | Val -4.9588 | E+=-4.276 E-=4.263 gap=8.539
+  -> Best model saved (val_phys=0.0385)
+  -> Best model saved (val_phys=0.0338)
+  -> Best model saved (val_phys=0.0326)
+  -> Best model saved (val_phys=0.0317)
+  -> Best model saved (val_phys=0.0314)
+  -> Best model saved (val_phys=0.0296)
+Epoch   10/200 | Train -4.9691 (phys 0.0303 cd -4.9994) | Val -4.9705 | E+=-4.999 E-=4.999 gap=9.999
+  -> Best model saved (val_phys=0.0293)
+  -> Best model saved (val_phys=0.0288)
+  -> Best model saved (val_phys=0.0285)
+  -> Best model saved (val_phys=0.0274)
+  -> Best model saved (val_phys=0.0269)
+Epoch   20/200 | Train -4.9729 (phys 0.0269 cd -4.9998) | Val -4.9721 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0262)
+  -> Best model saved (val_phys=0.0255)
+  -> Best model saved (val_phys=0.0250)
+Epoch   30/200 | Train -4.9757 (phys 0.0241 cd -4.9999) | Val -4.9753 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0245)
+  -> Best model saved (val_phys=0.0238)
+  -> Best model saved (val_phys=0.0232)
+  -> Best model saved (val_phys=0.0230)
+Epoch   40/200 | Train -4.9781 (phys 0.0217 cd -4.9999) | Val -4.9740 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0228)
+  -> Best model saved (val_phys=0.0225)
+  -> Best model saved (val_phys=0.0213)
+Epoch   50/200 | Train -4.9800 (phys 0.0200 cd -4.9999) | Val -4.9773 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0212)
+  -> Best model saved (val_phys=0.0207)
+Epoch   60/200 | Train -4.9812 (phys 0.0187 cd -4.9999) | Val -4.9784 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0198)
+  -> Best model saved (val_phys=0.0192)
+Epoch   70/200 | Train -4.9822 (phys 0.0178 cd -5.0000) | Val -4.9804 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0190)
+  -> Best model saved (val_phys=0.0187)
+  -> Best model saved (val_phys=0.0186)
+Epoch   80/200 | Train -4.9834 (phys 0.0166 cd -5.0000) | Val -4.9807 | E+=-5.000 E-=5.000 gap=10.000
+Epoch   90/200 | Train -4.9845 (phys 0.0154 cd -4.9999) | Val -4.9814 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0181)
+  -> Best model saved (val_phys=0.0180)
+Epoch  100/200 | Train -4.9837 (phys 0.0162 cd -4.9999) | Val -4.9808 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0175)
+Epoch  110/200 | Train -4.9852 (phys 0.0148 cd -5.0000) | Val -4.9798 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0173)
+Epoch  120/200 | Train -4.9864 (phys 0.0135 cd -5.0000) | Val -4.9823 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0168)
+Epoch  130/200 | Train -4.9861 (phys 0.0139 cd -5.0000) | Val -4.9809 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  140/200 | Train -4.9860 (phys 0.0140 cd -5.0000) | Val -4.9811 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 146 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C2_air_leak/models/last_model.pth
+Best val loss: 0.0168 at epoch 126
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2187 °C
+  Excess O2   RMSE : 0.5111 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C2_air_leak/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C2_air_leak/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▂▂▂▂▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▅▅▆▆▆▆▆▆▇▇▇▇▇████
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▇▇▇█████▁▇███████████▆██████████████████
+wandb:    train/e_neg ▃▇▆▇▇████▇█▁▇█████████▃█████████████████
+wandb:    train/e_pos █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▇▇▆▆▅▅▅▅▄▄▄▄▄▄▄▃▄▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▂▁▁▁▁▁
+wandb:  train/physics █▆▆▆▅▅▄▅▄▄▃▃▃▃▃▃▃▂▃▃▂▂▂▂▂▂▂▂▁▂▁▂▁▁▁▁▂▁▁▁
+wandb:         val/cd ▂▆▁▂▁▁▁▄▁▂▁▁▂▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 126
+wandb: best_val_phys_loss 0.01682
+wandb:      early_stopped True
+wandb:              epoch 146
+wandb:      stopped_epoch 146
+wandb:       test_rmse_o2 0.5111
+wandb:     test_rmse_temp 0.21874
+wandb:           train/cd -4.99996
+wandb:       train/cd_gap 9.99998
+wandb:        train/e_neg 4.99991
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run C2_air_leak at: https://wandb.ai/maercaestro/eblnn-ablation/runs/znibkmif
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260301_182229-znibkmif/logs
+
+⏱  Total wall time: 43245s
+Experiment complete.
+
+
+✅  C2_air_leak  (43250s)
+
+─────────────────────────────────────────────────────────────────
+  [10/20]  C3_tube_rupture  (started 06:23:16)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260302_062319-91epi9j8
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run C3_tube_rupture
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/91epi9j8
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: C3_tube_rupture
+  Real + S3 tube rupture only
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : ['S3_tube_rupture']
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C3_tube_rupture
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Scenario filter ['S3_tube_rupture']: 150,000 → 25,000 rows
+Edge cases: 25,000 rows  →  833 sequences  (block=30)
+Total     : 16,522 sequences  (seq_len=30)
+Split     : 13,217 train / 1,652 val / 1,653 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.0934 (phys 0.1988 cd -4.2921) | Val -4.8525 | E+=-4.277 E-=4.280 gap=8.556
+  -> Best model saved (val_phys=0.1448)
+  -> Best model saved (val_phys=0.1379)
+  -> Best model saved (val_phys=0.1356)
+  -> Best model saved (val_phys=0.1306)
+  -> Best model saved (val_phys=0.1289)
+  -> Best model saved (val_phys=0.1247)
+  -> Best model saved (val_phys=0.1205)
+Epoch   10/200 | Train -4.8785 (phys 0.1207 cd -4.9992) | Val -4.8810 | E+=-4.999 E-=4.999 gap=9.998
+  -> Best model saved (val_phys=0.1185)
+  -> Best model saved (val_phys=0.1180)
+  -> Best model saved (val_phys=0.1179)
+  -> Best model saved (val_phys=0.1130)
+  -> Best model saved (val_phys=0.1098)
+  -> Best model saved (val_phys=0.1095)
+Epoch   20/200 | Train -4.8922 (phys 0.1074 cd -4.9995) | Val -4.8919 | E+=-4.999 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.1078)
+  -> Best model saved (val_phys=0.1058)
+  -> Best model saved (val_phys=0.1043)
+  -> Best model saved (val_phys=0.1008)
+  -> Best model saved (val_phys=0.1000)
+  -> Best model saved (val_phys=0.0986)
+Epoch   30/200 | Train -4.9029 (phys 0.0969 cd -4.9998) | Val -4.8977 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0961)
+  -> Best model saved (val_phys=0.0952)
+  -> Best model saved (val_phys=0.0941)
+  -> Best model saved (val_phys=0.0914)
+Epoch   40/200 | Train -4.9122 (phys 0.0876 cd -4.9998) | Val -4.9042 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0904)
+  -> Best model saved (val_phys=0.0894)
+Epoch   50/200 | Train -4.9141 (phys 0.0844 cd -4.9985) | Val -4.8983 | E+=-4.999 E-=4.998 gap=9.997
+  -> Best model saved (val_phys=0.0885)
+  -> Best model saved (val_phys=0.0868)
+  -> Best model saved (val_phys=0.0865)
+  -> Best model saved (val_phys=0.0856)
+Epoch   60/200 | Train -4.9202 (phys 0.0797 cd -4.9999) | Val -4.9109 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0832)
+  -> Best model saved (val_phys=0.0831)
+Epoch   70/200 | Train -4.9222 (phys 0.0776 cd -4.9998) | Val -4.9146 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0792)
+Epoch   80/200 | Train -4.9277 (phys 0.0722 cd -4.9999) | Val -4.9154 | E+=-5.000 E-=5.000 gap=10.000
+Epoch   90/200 | Train -4.9312 (phys 0.0687 cd -4.9999) | Val -4.9204 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0786)
+  -> Best model saved (val_phys=0.0781)
+Epoch  100/200 | Train -4.9291 (phys 0.0709 cd -4.9999) | Val -4.9159 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  110/200 | Train -4.9363 (phys 0.0637 cd -4.9999) | Val -4.9205 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 117 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C3_tube_rupture/models/last_model.pth
+Best val loss: 0.0781 at epoch 97
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2452 °C
+  Excess O2   RMSE : 0.5605 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C3_tube_rupture/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C3_tube_rupture/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▂▂▂▂▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▆▆▇▇▇▇▇▇▇▇▇█
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd ▆▄▂▂▂▂▂▂▁▂▁▁▁▁▁█▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁███████████████████████████████████████
+wandb:    train/e_neg ▁▆▆▇▇▇█▇▇▇▇▃█▇▇██████▇▇█▇█▇█████████████
+wandb:    train/e_pos ▅▂▃▃▃█▁▁▁▁▁▁▁▁▁▆▂▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▂▁
+wandb:     train/loss █▇▆▆▆▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▂▂▂▃▂▂▂▂▂▂▂▁▂▂▁▁▁▁▁
+wandb:  train/physics ██▇▇▇▆▆▆▆▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁
+wandb:         val/cd ▇▇▅▄▄▅█▄▂▃▄▅▃▃▄▁▂▂▁▂▁▅▁▁▂▃▁▁▁▁▂▂▁▂▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 97
+wandb: best_val_phys_loss 0.07808
+wandb:      early_stopped True
+wandb:              epoch 117
+wandb:      stopped_epoch 117
+wandb:       test_rmse_o2 0.56053
+wandb:     test_rmse_temp 0.24518
+wandb:           train/cd -4.99994
+wandb:       train/cd_gap 10.0
+wandb:        train/e_neg 5.0
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run C3_tube_rupture at: https://wandb.ai/maercaestro/eblnn-ablation/runs/91epi9j8
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260302_062319-91epi9j8/logs
+
+⏱  Total wall time: 35098s
+Experiment complete.
+
+
+✅  C3_tube_rupture  (35103s)
+
+─────────────────────────────────────────────────────────────────
+  [11/20]  C4_positive_pressure  (started 16:08:19)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260302_160822-xa2qad50
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run C4_positive_pressure
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/xa2qad50
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: C4_positive_pressure
+  Real + S4 positive pressure only
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : ['S4_positive_pressure']
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C4_positive_pressure
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Scenario filter ['S4_positive_pressure']: 150,000 → 25,000 rows
+Edge cases: 25,000 rows  →  833 sequences  (block=30)
+Total     : 16,522 sequences  (seq_len=30)
+Split     : 13,217 train / 1,652 val / 1,653 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -3.8917 (phys 0.3742 cd -4.2659) | Val -4.6826 | E+=-4.254 E-=4.263 gap=8.517
+  -> Best model saved (val_phys=0.3108)
+  -> Best model saved (val_phys=0.3077)
+  -> Best model saved (val_phys=0.2770)
+  -> Best model saved (val_phys=0.2686)
+  -> Best model saved (val_phys=0.2580)
+  -> Best model saved (val_phys=0.2542)
+  -> Best model saved (val_phys=0.2526)
+Epoch   10/200 | Train -4.7451 (phys 0.2500 cd -4.9951) | Val -4.7553 | E+=-4.994 E-=4.995 gap=9.989
+  -> Best model saved (val_phys=0.2427)
+  -> Best model saved (val_phys=0.2278)
+  -> Best model saved (val_phys=0.2249)
+  -> Best model saved (val_phys=0.2215)
+Epoch   20/200 | Train -4.7889 (phys 0.2100 cd -4.9989) | Val -4.7802 | E+=-4.999 E-=4.998 gap=9.997
+  -> Best model saved (val_phys=0.2192)
+  -> Best model saved (val_phys=0.2099)
+  -> Best model saved (val_phys=0.1977)
+  -> Best model saved (val_phys=0.1976)
+  -> Best model saved (val_phys=0.1963)
+  -> Best model saved (val_phys=0.1862)
+Epoch   30/200 | Train -4.8192 (phys 0.1805 cd -4.9997) | Val -4.8077 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.1853)
+  -> Best model saved (val_phys=0.1845)
+  -> Best model saved (val_phys=0.1792)
+  -> Best model saved (val_phys=0.1744)
+  -> Best model saved (val_phys=0.1702)
+Epoch   40/200 | Train -4.8393 (phys 0.1598 cd -4.9991) | Val -4.8240 | E+=-4.999 E-=4.999 gap=9.998
+Epoch   50/200 | Train -4.8484 (phys 0.1510 cd -4.9993) | Val -4.8273 | E+=-4.999 E-=4.999 gap=9.999
+  -> Best model saved (val_phys=0.1579)
+Epoch   60/200 | Train -4.8598 (phys 0.1393 cd -4.9991) | Val -4.8285 | E+=-4.998 E-=4.999 gap=9.997
+Epoch   70/200 | Train -4.8621 (phys 0.1364 cd -4.9984) | Val -4.8345 | E+=-4.999 E-=4.999 gap=9.997
+
+Early stopping at epoch 73 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C4_positive_pressure/models/last_model.pth
+Best val loss: 0.1579 at epoch 53
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.3605 °C
+  Excess O2   RMSE : 0.4929 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C4_positive_pressure/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C4_positive_pressure/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▂▂▂▂▂▂▂▃▃▃▃▃▃▃▃▄▄▄▄▄▅▅▆▆▆▆▆▇▇▇▇▇████
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁███████████████████████████████████████
+wandb:    train/e_neg ▁███████████████████████████████████████
+wandb:    train/e_pos █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  train/physics █▆▆▅▅▄▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁
+wandb:         val/cd ▃▂▂▁▂▁▁█▁▅▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 53
+wandb: best_val_phys_loss 0.15792
+wandb:      early_stopped True
+wandb:              epoch 73
+wandb:      stopped_epoch 73
+wandb:       test_rmse_o2 0.49289
+wandb:     test_rmse_temp 0.36046
+wandb:           train/cd -4.99785
+wandb:       train/cd_gap 9.99513
+wandb:        train/e_neg 4.99783
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run C4_positive_pressure at: https://wandb.ai/maercaestro/eblnn-ablation/runs/xa2qad50
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260302_160822-xa2qad50/logs
+
+⏱  Total wall time: 21792s
+Experiment complete.
+
+
+✅  C4_positive_pressure  (21797s)
+
+─────────────────────────────────────────────────────────────────
+  [12/20]  C5_fuel_trip  (started 22:11:36)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260302_221139-8y5s0zom
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run C5_fuel_trip
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/8y5s0zom
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: C5_fuel_trip
+  Real + S5 fuel trip only
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : ['S5_fuel_trip']
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C5_fuel_trip
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Scenario filter ['S5_fuel_trip']: 150,000 → 25,000 rows
+Edge cases: 25,000 rows  →  833 sequences  (block=30)
+Total     : 16,522 sequences  (seq_len=30)
+Split     : 13,217 train / 1,652 val / 1,653 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.3045 (phys 0.0761 cd -4.3807) | Val -4.9644 | E+=-4.386 E-=4.381 gap=8.767
+  -> Best model saved (val_phys=0.0322)
+  -> Best model saved (val_phys=0.0284)
+  -> Best model saved (val_phys=0.0264)
+  -> Best model saved (val_phys=0.0255)
+  -> Best model saved (val_phys=0.0248)
+  -> Best model saved (val_phys=0.0242)
+Epoch   10/200 | Train -4.9754 (phys 0.0242 cd -4.9996) | Val -4.9753 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0230)
+  -> Best model saved (val_phys=0.0228)
+  -> Best model saved (val_phys=0.0226)
+  -> Best model saved (val_phys=0.0217)
+Epoch   20/200 | Train -4.9773 (phys 0.0225 cd -4.9998) | Val -4.9776 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0216)
+  -> Best model saved (val_phys=0.0209)
+Epoch   30/200 | Train -4.9789 (phys 0.0209 cd -4.9999) | Val -4.9785 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0206)
+  -> Best model saved (val_phys=0.0204)
+  -> Best model saved (val_phys=0.0203)
+Epoch   40/200 | Train -4.9803 (phys 0.0196 cd -4.9999) | Val -4.9798 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0201)
+  -> Best model saved (val_phys=0.0196)
+  -> Best model saved (val_phys=0.0193)
+  -> Best model saved (val_phys=0.0191)
+Epoch   50/200 | Train -4.9813 (phys 0.0186 cd -4.9999) | Val -4.9808 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0188)
+  -> Best model saved (val_phys=0.0184)
+Epoch   60/200 | Train -4.9820 (phys 0.0180 cd -5.0000) | Val -4.9810 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0180)
+Epoch   70/200 | Train -4.9819 (phys 0.0180 cd -4.9999) | Val -4.9814 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0178)
+  -> Best model saved (val_phys=0.0175)
+Epoch   80/200 | Train -4.9833 (phys 0.0167 cd -5.0000) | Val -4.9823 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0174)
+Epoch   90/200 | Train -4.9839 (phys 0.0160 cd -5.0000) | Val -4.9820 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0167)
+  -> Best model saved (val_phys=0.0165)
+Epoch  100/200 | Train -4.9852 (phys 0.0148 cd -5.0000) | Val -4.9821 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  110/200 | Train -4.9852 (phys 0.0147 cd -5.0000) | Val -4.9812 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0164)
+Epoch  120/200 | Train -4.9858 (phys 0.0142 cd -5.0000) | Val -4.9826 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  130/200 | Train -4.9864 (phys 0.0134 cd -4.9998) | Val -4.9830 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 135 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C5_fuel_trip/models/last_model.pth
+Best val loss: 0.0164 at epoch 115
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2069 °C
+  Excess O2   RMSE : 0.6086 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C5_fuel_trip/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C5_fuel_trip/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▂▂▂▂▂▂▃▃▃▃▃▄▄▄▄▄▄▄▄▅▅▅▅▆▆▆▆▆▆▆▇▇▇▇▇██
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▆▆▆▇▇▇▇█▇██████▁████████████████████████
+wandb:    train/e_neg ▁▅▅▅▆▆▇▇██▇▇▄▇█▇███▇█▇█▇██████▇█████████
+wandb:    train/e_pos ▄▄▃▃▂▂▂▂▁▂▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  train/physics █▇▇▆▆▆▆▆▆▅▅▅▅▅▄▄▄▄▄▃▃▃▃▃▃▃▃▃▃▃▂▃▂▁▂▁▁▁▁▂
+wandb:         val/cd █▂▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 115
+wandb: best_val_phys_loss 0.0164
+wandb:      early_stopped True
+wandb:              epoch 135
+wandb:      stopped_epoch 135
+wandb:       test_rmse_o2 0.60856
+wandb:     test_rmse_temp 0.20694
+wandb:           train/cd -4.99998
+wandb:       train/cd_gap 9.99996
+wandb:        train/e_neg 4.99999
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run C5_fuel_trip at: https://wandb.ai/maercaestro/eblnn-ablation/runs/8y5s0zom
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260302_221139-8y5s0zom/logs
+
+⏱  Total wall time: 41583s
+Experiment complete.
+
+
+✅  C5_fuel_trip  (41588s)
+
+─────────────────────────────────────────────────────────────────
+  [13/20]  C6_fuel_contamination  (started 09:44:45)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260303_094448-5l4zp1h2
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run C6_fuel_contamination
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/5l4zp1h2
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: C6_fuel_contamination
+  Real + S6 fuel contamination only
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : ['S6_fuel_contamination']
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C6_fuel_contamination
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Scenario filter ['S6_fuel_contamination']: 150,000 → 25,000 rows
+Edge cases: 25,000 rows  →  833 sequences  (block=30)
+Total     : 16,522 sequences  (seq_len=30)
+Split     : 13,217 train / 1,652 val / 1,653 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.1448 (phys 0.1435 cd -4.2883) | Val -4.9023 | E+=-4.282 E-=4.295 gap=8.577
+  -> Best model saved (val_phys=0.0955)
+  -> Best model saved (val_phys=0.0905)
+  -> Best model saved (val_phys=0.0863)
+  -> Best model saved (val_phys=0.0838)
+  -> Best model saved (val_phys=0.0821)
+  -> Best model saved (val_phys=0.0805)
+Epoch   10/200 | Train -4.9190 (phys 0.0802 cd -4.9992) | Val -4.9176 | E+=-4.999 E-=4.999 gap=9.998
+  -> Best model saved (val_phys=0.0802)
+  -> Best model saved (val_phys=0.0796)
+  -> Best model saved (val_phys=0.0787)
+  -> Best model saved (val_phys=0.0775)
+  -> Best model saved (val_phys=0.0767)
+Epoch   20/200 | Train -4.9263 (phys 0.0735 cd -4.9998) | Val -4.9246 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0752)
+  -> Best model saved (val_phys=0.0729)
+Epoch   30/200 | Train -4.9309 (phys 0.0690 cd -4.9999) | Val -4.9281 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0718)
+  -> Best model saved (val_phys=0.0716)
+  -> Best model saved (val_phys=0.0701)
+  -> Best model saved (val_phys=0.0695)
+  -> Best model saved (val_phys=0.0686)
+Epoch   40/200 | Train -4.9361 (phys 0.0638 cd -4.9999) | Val -4.9284 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0681)
+  -> Best model saved (val_phys=0.0678)
+  -> Best model saved (val_phys=0.0657)
+Epoch   50/200 | Train -4.9381 (phys 0.0618 cd -4.9999) | Val -4.9315 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0656)
+  -> Best model saved (val_phys=0.0650)
+  -> Best model saved (val_phys=0.0648)
+Epoch   60/200 | Train -4.9411 (phys 0.0588 cd -4.9999) | Val -4.9366 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0633)
+Epoch   70/200 | Train -4.9440 (phys 0.0559 cd -4.9999) | Val -4.9374 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0625)
+  -> Best model saved (val_phys=0.0621)
+Epoch   80/200 | Train -4.9455 (phys 0.0545 cd -4.9999) | Val -4.9360 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0615)
+Epoch   90/200 | Train -4.9493 (phys 0.0506 cd -4.9999) | Val -4.9382 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0609)
+Epoch  100/200 | Train -4.9524 (phys 0.0476 cd -4.9999) | Val -4.9390 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  110/200 | Train -4.9541 (phys 0.0458 cd -4.9999) | Val -4.9351 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 113 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C6_fuel_contamination/models/last_model.pth
+Best val loss: 0.0609 at epoch 93
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.3067 °C
+  Excess O2   RMSE : 0.6424 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C6_fuel_contamination/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/C6_fuel_contamination/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▂▂▂▂▂▂▂▂▂▂▃▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▆▆▆▆▆▇▇▇████
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd ▆▃▂▁▁▁▁█▁▁▁▁▂▁▁▁▁▁▁▃▁▁▁▁▁▁▄▄▂▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁███████████████████████████████████████
+wandb:    train/e_neg ▁▃▄▅▇▇▇▇█████▇███▂████▅█████████▅███████
+wandb:    train/e_pos ▅▄▄█▃▂▂▂▂▁▁▂▁▁▁▁▁▁▁▅▁▄▁▁▁▁▁▁▁▁▁▁▄▄▁▁▁▁▁▁
+wandb:     train/loss █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  train/physics █▇▇▆▆▆▅▅▅▅▅▄▄▄▄▄▄▄▃▃▃▂▃▂▂▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁
+wandb:         val/cd ▅▄█▄▂▂▂▁▁▁▁▂▅▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 93
+wandb: best_val_phys_loss 0.06086
+wandb:      early_stopped True
+wandb:              epoch 113
+wandb:      stopped_epoch 113
+wandb:       test_rmse_o2 0.64244
+wandb:     test_rmse_temp 0.30669
+wandb:           train/cd -4.99994
+wandb:       train/cd_gap 9.99983
+wandb:        train/e_neg 4.99991
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run C6_fuel_contamination at: https://wandb.ai/maercaestro/eblnn-ablation/runs/5l4zp1h2
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260303_094448-5l4zp1h2/logs
+
+⏱  Total wall time: 34901s
+Experiment complete.
+
+
+✅  C6_fuel_contamination  (34906s)
+
+─────────────────────────────────────────────────────────────────
+  [14/20]  D1_hidden_64  (started 19:26:30)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run l72dz6ia
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260303_192634-l72dz6ia
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run D1_hidden_64
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/l72dz6ia
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: D1_hidden_64
+  Smaller CfC backbone (hidden=64)
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 64
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D1_hidden_64
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Edge cases: 150,000 rows  →  4,998 sequences  (block=30)
+Total     : 20,687 sequences  (seq_len=30)
+Split     : 16,549 train / 2,069 val / 2,069 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 76,675 total trainable parameters
+  CfC backbone  : 59,904
+  Physics head  : 130
+  EBM head      : 16,641
+  Input size    : 5
+  Hidden size   : 64
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.2559 (phys 0.1009 cd -4.3567) | Val -4.9503 | E+=-4.316 E-=4.363 gap=8.679
+  -> Best model saved (val_phys=0.0438)
+  -> Best model saved (val_phys=0.0350)
+  -> Best model saved (val_phys=0.0295)
+  -> Best model saved (val_phys=0.0283)
+  -> Best model saved (val_phys=0.0275)
+  -> Best model saved (val_phys=0.0260)
+  -> Best model saved (val_phys=0.0254)
+  -> Best model saved (val_phys=0.0250)
+Epoch   10/200 | Train -4.9735 (phys 0.0258 cd -4.9993) | Val -4.9737 | E+=-4.999 E-=4.999 gap=9.998
+  -> Best model saved (val_phys=0.0245)
+  -> Best model saved (val_phys=0.0242)
+  -> Best model saved (val_phys=0.0234)
+Epoch   20/200 | Train -4.9761 (phys 0.0236 cd -4.9997) | Val -4.9757 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0232)
+  -> Best model saved (val_phys=0.0229)
+  -> Best model saved (val_phys=0.0223)
+Epoch   30/200 | Train -4.9743 (phys 0.0256 cd -4.9999) | Val -4.9764 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0222)
+Epoch   40/200 | Train -4.9786 (phys 0.0213 cd -4.9999) | Val -4.9768 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0220)
+  -> Best model saved (val_phys=0.0218)
+Epoch   50/200 | Train -4.9779 (phys 0.0220 cd -4.9999) | Val -4.9779 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0215)
+  -> Best model saved (val_phys=0.0212)
+Epoch   60/200 | Train -4.9795 (phys 0.0204 cd -4.9999) | Val -4.9787 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0210)
+  -> Best model saved (val_phys=0.0205)
+Epoch   70/200 | Train -4.9801 (phys 0.0198 cd -5.0000) | Val -4.9756 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0203)
+  -> Best model saved (val_phys=0.0202)
+Epoch   80/200 | Train -4.9793 (phys 0.0207 cd -5.0000) | Val -4.9774 | E+=-5.000 E-=5.000 gap=10.000
+Epoch   90/200 | Train -4.9805 (phys 0.0195 cd -5.0000) | Val -4.9790 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 99 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D1_hidden_64/models/last_model.pth
+Best val loss: 0.0202 at epoch 79
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2318 °C
+  Excess O2   RMSE : 0.7245 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D1_hidden_64/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D1_hidden_64/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▁▂▂▂▂▂▂▃▃▃▃▃▄▄▄▄▄▄▄▅▅▆▆▆▆▆▇▇▇▇▇▇▇███
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁███████████████████████████████████████
+wandb:    train/e_neg ▁███████████████████████████████████████
+wandb:    train/e_pos █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▄▃▃▃▂▂▂▄▂▂▂▂▂▂▁▂▃▂▁▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  train/physics █▃▂▂▂▁▁▂▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         val/cd █▄▃▃▄▂▂▂▄▂▂▁▂▁▁▁▁▂▁▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 79
+wandb: best_val_phys_loss 0.02023
+wandb:      early_stopped True
+wandb:              epoch 99
+wandb:      stopped_epoch 99
+wandb:       test_rmse_o2 0.72453
+wandb:     test_rmse_temp 0.2318
+wandb:           train/cd -4.99945
+wandb:       train/cd_gap 9.99894
+wandb:        train/e_neg 4.99952
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run D1_hidden_64 at: https://wandb.ai/maercaestro/eblnn-ablation/runs/l72dz6ia
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260303_192634-l72dz6ia/logs
+
+⏱  Total wall time: 29929s
+Experiment complete.
+
+
+✅  D1_hidden_64  (29934s)
+
+─────────────────────────────────────────────────────────────────
+  [15/20]  D2_hidden_256  (started 03:45:25)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260304_034528-z9y62m7g
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run D2_hidden_256
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/z9y62m7g
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: D2_hidden_256
+  Larger CfC backbone (hidden=256)
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 256
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D2_hidden_256
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Edge cases: 150,000 rows  →  4,998 sequences  (block=30)
+Total     : 20,687 sequences  (seq_len=30)
+Split     : 16,549 train / 2,069 val / 2,069 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 475,651 total trainable parameters
+  CfC backbone  : 433,920
+  Physics head  : 514
+  EBM head      : 41,217
+  Input size    : 5
+  Hidden size   : 256
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.2587 (phys 0.0917 cd -4.3504) | Val -4.9540 | E+=-4.306 E-=4.367 gap=8.673
+  -> Best model saved (val_phys=0.0434)
+  -> Best model saved (val_phys=0.0365)
+  -> Best model saved (val_phys=0.0283)
+  -> Best model saved (val_phys=0.0277)
+  -> Best model saved (val_phys=0.0265)
+  -> Best model saved (val_phys=0.0258)
+  -> Best model saved (val_phys=0.0255)
+Epoch   10/200 | Train -4.9753 (phys 0.0242 cd -4.9995) | Val -4.9740 | E+=-5.000 E-=4.999 gap=9.999
+  -> Best model saved (val_phys=0.0244)
+  -> Best model saved (val_phys=0.0238)
+  -> Best model saved (val_phys=0.0237)
+  -> Best model saved (val_phys=0.0232)
+Epoch   20/200 | Train -4.9763 (phys 0.0234 cd -4.9997) | Val -4.9740 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0223)
+  -> Best model saved (val_phys=0.0221)
+Epoch   30/200 | Train -4.9785 (phys 0.0215 cd -4.9999) | Val -4.9779 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0220)
+  -> Best model saved (val_phys=0.0217)
+  -> Best model saved (val_phys=0.0214)
+Epoch   40/200 | Train -4.9797 (phys 0.0203 cd -5.0000) | Val -4.9770 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0211)
+  -> Best model saved (val_phys=0.0207)
+Epoch   50/200 | Train -4.9803 (phys 0.0196 cd -5.0000) | Val -4.9787 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0206)
+  -> Best model saved (val_phys=0.0204)
+  -> Best model saved (val_phys=0.0202)
+Epoch   60/200 | Train -4.9542 (phys 0.0336 cd -4.9879) | Val -4.9712 | E+=-4.989 E-=4.984 gap=9.973
+Epoch   70/200 | Train -4.9765 (phys 0.0232 cd -4.9998) | Val -4.9754 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 77 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D2_hidden_256/models/last_model.pth
+Best val loss: 0.0202 at epoch 57
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2741 °C
+  Excess O2   RMSE : 0.7830 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D2_hidden_256/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D2_hidden_256/history.npz
+wandb: updating run metadata
+wandb: uploading history steps 76-78, summary, console lines 89-100
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▁▂▂▂▂▂▃▃▃▃▃▄▄▄▄▄▄▄▄▄▅▅▅▆▆▆▆▆▇▇▇▇▇▇▇█
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd ▅▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁
+wandb:   train/cd_gap ████████████████████████████████▁███████
+wandb:    train/e_neg ▁███████████████████████████████████████
+wandb:    train/e_pos ▃▂▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▂▁▆▁▁▁▁
+wandb:     train/loss ▅▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁
+wandb:  train/physics ▄▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▂▁▁▁▁▁▁▁
+wandb:         val/cd ▃▂▄▂▂▂▁▂▂▁▁▁▁▂▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▆█▅▄▄▃▃▃▃
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 57
+wandb: best_val_phys_loss 0.02025
+wandb:      early_stopped True
+wandb:              epoch 77
+wandb:      stopped_epoch 77
+wandb:       test_rmse_o2 0.78296
+wandb:     test_rmse_temp 0.27409
+wandb:           train/cd -4.99987
+wandb:       train/cd_gap 9.99969
+wandb:        train/e_neg 4.99983
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run D2_hidden_256 at: https://wandb.ai/maercaestro/eblnn-ablation/runs/z9y62m7g
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260304_034528-z9y62m7g/logs
+
+⏱  Total wall time: 43316s
+Experiment complete.
+
+
+✅  D2_hidden_256  (43321s)
+
+─────────────────────────────────────────────────────────────────
+  [16/20]  D3_ebm_small  (started 15:47:26)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260304_154729-0q5312p5
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run D3_ebm_small
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/0q5312p5
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: D3_ebm_small
+  Smaller EBM head [64, 32]
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [64, 32]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D3_ebm_small
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Edge cases: 150,000 rows  →  4,998 sequences  (block=30)
+Total     : 20,687 sequences  (seq_len=30)
+Split     : 16,549 train / 2,069 val / 2,069 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 162,435 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 10,369
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [64, 32]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.0115 (phys 0.0940 cd -4.1055) | Val -4.9517 | E+=-4.035 E-=4.116 gap=8.151
+  -> Best model saved (val_phys=0.0454)
+  -> Best model saved (val_phys=0.0391)
+  -> Best model saved (val_phys=0.0296)
+  -> Best model saved (val_phys=0.0287)
+  -> Best model saved (val_phys=0.0269)
+  -> Best model saved (val_phys=0.0267)
+  -> Best model saved (val_phys=0.0262)
+  -> Best model saved (val_phys=0.0261)
+Epoch   10/200 | Train -4.9751 (phys 0.0247 cd -4.9997) | Val -4.9749 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0248)
+  -> Best model saved (val_phys=0.0240)
+  -> Best model saved (val_phys=0.0237)
+Epoch   20/200 | Train -4.9754 (phys 0.0244 cd -4.9998) | Val -4.9762 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0236)
+  -> Best model saved (val_phys=0.0231)
+  -> Best model saved (val_phys=0.0225)
+Epoch   30/200 | Train -4.9779 (phys 0.0220 cd -4.9999) | Val -4.9776 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0223)
+  -> Best model saved (val_phys=0.0220)
+  -> Best model saved (val_phys=0.0218)
+  -> Best model saved (val_phys=0.0216)
+Epoch   40/200 | Train -4.9789 (phys 0.0210 cd -4.9999) | Val -4.9783 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0212)
+Epoch   50/200 | Train -4.9791 (phys 0.0208 cd -4.9999) | Val -4.9790 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0210)
+Epoch   60/200 | Train -4.9807 (phys 0.0193 cd -4.9999) | Val -4.9793 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0206)
+  -> Best model saved (val_phys=0.0203)
+Epoch   70/200 | Train -4.9808 (phys 0.0192 cd -5.0000) | Val -4.9796 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0201)
+Epoch   80/200 | Train -4.9810 (phys 0.0189 cd -5.0000) | Val -4.9796 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0200)
+  -> Best model saved (val_phys=0.0198)
+  -> Best model saved (val_phys=0.0197)
+Epoch   90/200 | Train -4.9817 (phys 0.0183 cd -5.0000) | Val -4.9794 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0195)
+Epoch  100/200 | Train -4.9807 (phys 0.0192 cd -5.0000) | Val -4.9803 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  110/200 | Train -4.9824 (phys 0.0175 cd -5.0000) | Val -4.9797 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 112 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D3_ebm_small/models/last_model.pth
+Best val loss: 0.0195 at epoch 92
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2406 °C
+  Excess O2   RMSE : 0.7109 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D3_ebm_small/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/D3_ebm_small/history.npz
+wandb: updating run metadata
+wandb: uploading data
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▁▂▂▂▂▃▃▃▃▃▃▃▄▄▄▄▄▄▄▄▅▅▅▅▅▆▆▆▇▇▇▇▇▇██
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▆▅▇▆▄▅▃▄▃▂▃▂▃▂▂▃▂▂▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁▅▆▆▄▇▇▇▇▇▇▇█▇██████████████████████████
+wandb:    train/e_neg ▁███████████████████████████████████████
+wandb:    train/e_pos █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▅▅▃▄▃▃▃▃▃▂▃▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  train/physics ▇█▆█▆▅▆▅▆▅▅▄▄▄▄▃▅▃▃▃▂▃▅▂▂▂▂▂▂▂▂▂▂▁▃▁▂▂▁▁
+wandb:         val/cd ▆█▃▃▄▂▄▂▃▃▂▂▂▂▁▁▁▁▁▂▃▂▂▂▁▁▁▁▁▂▁▁▁▁▁▁▁▁▂▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 92
+wandb: best_val_phys_loss 0.01949
+wandb:      early_stopped True
+wandb:              epoch 112
+wandb:      stopped_epoch 112
+wandb:       test_rmse_o2 0.71089
+wandb:     test_rmse_temp 0.24064
+wandb:           train/cd -4.99998
+wandb:       train/cd_gap 9.99993
+wandb:        train/e_neg 4.99994
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run D3_ebm_small at: https://wandb.ai/maercaestro/eblnn-ablation/runs/0q5312p5
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260304_154729-0q5312p5/logs
+
+⏱  Total wall time: 43440s
+Experiment complete.
+
+
+✅  D3_ebm_small  (43445s)
+
+─────────────────────────────────────────────────────────────────
+  [17/20]  E1_seq15  (started 03:51:31)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run 1jln8ou4
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260305_035134-1jln8ou4
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run E1_seq15
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/1jln8ou4
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: E1_seq15
+  Shorter sequences (15 timesteps)
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 15
+  step_size                : 0.01
+  stride                   : 15
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/E1_seq15
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  31,378 sequences  (stride=15)
+Edge cases: 150,000 rows  →  9,996 sequences  (block=15)
+Total     : 41,374 sequences  (seq_len=15)
+Split     : 33,099 train / 4,137 val / 4,138 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -4.6117 (phys 0.0662 cd -4.6779) | Val -4.9392 | E+=-4.668 E-=4.676 gap=9.343
+  -> Best model saved (val_phys=0.0363)
+  -> Best model saved (val_phys=0.0345)
+  -> Best model saved (val_phys=0.0300)
+  -> Best model saved (val_phys=0.0296)
+  -> Best model saved (val_phys=0.0281)
+  -> Best model saved (val_phys=0.0269)
+  -> Best model saved (val_phys=0.0262)
+Epoch   10/200 | Train -4.9718 (phys 0.0269 cd -4.9987) | Val -4.9714 | E+=-4.999 E-=4.999 gap=9.997
+  -> Best model saved (val_phys=0.0254)
+  -> Best model saved (val_phys=0.0249)
+  -> Best model saved (val_phys=0.0243)
+Epoch   20/200 | Train -4.9758 (phys 0.0241 cd -4.9999) | Val -4.9727 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0236)
+  -> Best model saved (val_phys=0.0232)
+  -> Best model saved (val_phys=0.0229)
+Epoch   30/200 | Train -4.9773 (phys 0.0227 cd -4.9999) | Val -4.9768 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0226)
+Epoch   40/200 | Train -4.9776 (phys 0.0223 cd -4.9999) | Val -4.9735 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0220)
+Epoch   50/200 | Train -4.9785 (phys 0.0214 cd -5.0000) | Val -4.9750 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0215)
+Epoch   60/200 | Train -4.9794 (phys 0.0206 cd -5.0000) | Val -4.9773 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0214)
+Epoch   70/200 | Train -4.9800 (phys 0.0200 cd -5.0000) | Val -4.9777 | E+=-5.000 E-=5.000 gap=10.000
+Epoch   80/200 | Train -4.9804 (phys 0.0196 cd -5.0000) | Val -4.9782 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 87 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/E1_seq15/models/last_model.pth
+Best val loss: 0.0214 at epoch 67
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2334 °C
+  Excess O2   RMSE : 0.7689 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/E1_seq15/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/E1_seq15/history.npz
+wandb: updating run metadata
+wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading history steps 86-88, summary, console lines 86-97
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▁▂▂▂▂▂▃▃▃▃▃▃▄▄▄▄▄▄▅▅▅▅▆▆▆▆▆▆▆▇▇▇▇▇██
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▅▃▂▂▂▁▁▁▁▁▁▁▁▁▁▃▁█▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▂▁▃▂▅▆▆▄▇█████████▆▇████████████████████
+wandb:    train/e_neg ▁███████████████████████████████████████
+wandb:    train/e_pos █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  train/physics █▃▃▃▃▂▂▂▂▂▂▂▂▂▂▁▂▁▁▂▁▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         val/cd █▁▁▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▁▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 67
+wandb: best_val_phys_loss 0.02137
+wandb:      early_stopped True
+wandb:              epoch 87
+wandb:      stopped_epoch 87
+wandb:       test_rmse_o2 0.76891
+wandb:     test_rmse_temp 0.2334
+wandb:           train/cd -4.99995
+wandb:       train/cd_gap 9.99991
+wandb:        train/e_neg 4.99997
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run E1_seq15 at: https://wandb.ai/maercaestro/eblnn-ablation/runs/1jln8ou4
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260305_035134-1jln8ou4/logs
+
+⏱  Total wall time: 34132s
+Experiment complete.
+
+
+✅  E1_seq15  (34139s)
+
+─────────────────────────────────────────────────────────────────
+  [18/20]  E2_seq60  (started 13:20:29)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run hfoq8nnk
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260305_132033-hfoq8nnk
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run E2_seq60
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/hfoq8nnk
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: E2_seq60
+  Longer sequences (60 timesteps)
+═════════════════════════════════════════════════════════════════
+  alpha                    : 1.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 60
+  step_size                : 0.01
+  stride                   : 60
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/E2_seq60
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  7,844 sequences  (stride=60)
+Edge cases: 150,000 rows  →  2,496 sequences  (block=60)
+Total     : 10,340 sequences  (seq_len=60)
+Split     : 8,272 train / 1,034 val / 1,034 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=1.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -3.7840 (phys 0.1213 cd -3.9053) | Val -4.9443 | E+=-3.903 E-=3.931 gap=7.834
+  -> Best model saved (val_phys=0.0506)
+  -> Best model saved (val_phys=0.0390)
+  -> Best model saved (val_phys=0.0292)
+  -> Best model saved (val_phys=0.0250)
+  -> Best model saved (val_phys=0.0244)
+  -> Best model saved (val_phys=0.0241)
+Epoch   10/200 | Train -4.9754 (phys 0.0237 cd -4.9991) | Val -4.9750 | E+=-4.999 E-=4.999 gap=9.998
+  -> Best model saved (val_phys=0.0231)
+  -> Best model saved (val_phys=0.0229)
+  -> Best model saved (val_phys=0.0228)
+Epoch   20/200 | Train -4.9769 (phys 0.0226 cd -4.9996) | Val -4.9774 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0225)
+  -> Best model saved (val_phys=0.0220)
+  -> Best model saved (val_phys=0.0218)
+  -> Best model saved (val_phys=0.0215)
+Epoch   30/200 | Train -4.9776 (phys 0.0222 cd -4.9998) | Val -4.9775 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0211)
+  -> Best model saved (val_phys=0.0208)
+Epoch   40/200 | Train -4.9788 (phys 0.0211 cd -4.9999) | Val -4.9783 | E+=-5.000 E-=5.000 gap=10.000
+Epoch   50/200 | Train -4.9794 (phys 0.0205 cd -4.9999) | Val -4.9791 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0205)
+  -> Best model saved (val_phys=0.0204)
+Epoch   60/200 | Train -4.9797 (phys 0.0202 cd -4.9999) | Val -4.9786 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0202)
+  -> Best model saved (val_phys=0.0199)
+Epoch   70/200 | Train -4.9742 (phys 0.0254 cd -4.9996) | Val -4.9704 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0197)
+  -> Best model saved (val_phys=0.0194)
+Epoch   80/200 | Train -4.9807 (phys 0.0192 cd -5.0000) | Val -4.9797 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0191)
+Epoch   90/200 | Train -4.9810 (phys 0.0190 cd -5.0000) | Val -4.9806 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  100/200 | Train -4.9815 (phys 0.0185 cd -5.0000) | Val -4.9807 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 101 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/E2_seq60/models/last_model.pth
+Best val loss: 0.0191 at epoch 81
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2939 °C
+  Excess O2   RMSE : 0.7236 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/E2_seq60/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/E2_seq60/history.npz
+wandb: updating run metadata
+wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml
+wandb: uploading history steps 100-102, summary, console lines 93-104
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▂▂▂▂▂▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇█████
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd ▄▃▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▂▇▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▁███████████████████████████████████████
+wandb:    train/e_neg ▄▅▆▆▅▇█▇▇▇█████▇██▇█▁█████▂▇██████▇█████
+wandb:    train/e_pos █▂▆▂▄▂▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▄▁▁▁▁▄▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss ▇█▄▃▃▅▂▂▃▄▂▂▂▂▂▂▃▂▄▂▂▁▁▁▁▄▂▂▁▁▁▁▁▁▁▁▁▂▃▁
+wandb:  train/physics █▃▂▁▁▂▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         val/cd ▅█▅▃▃▃▂▂▃▂▂▂▂▄▂▃▁▂▂▁▂▁▁▁▁▁▂▁▁▂▁▁▁▁▂▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 81
+wandb: best_val_phys_loss 0.01906
+wandb:      early_stopped True
+wandb:              epoch 101
+wandb:      stopped_epoch 101
+wandb:       test_rmse_o2 0.72359
+wandb:     test_rmse_temp 0.29387
+wandb:           train/cd -4.99997
+wandb:       train/cd_gap 10.00003
+wandb:        train/e_neg 5.00003
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run E2_seq60 at: https://wandb.ai/maercaestro/eblnn-ablation/runs/hfoq8nnk
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260305_132033-hfoq8nnk/logs
+
+⏱  Total wall time: 41517s
+Experiment complete.
+
+
+✅  E2_seq60  (41524s)
+
+─────────────────────────────────────────────────────────────────
+  [19/20]  F1_alpha_01  (started 00:52:33)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run qc6liy5t
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260306_005236-qc6liy5t
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run F1_alpha_01
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/qc6liy5t
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: F1_alpha_01
+  Alpha = 0.1 (physics-dominant)
+═════════════════════════════════════════════════════════════════
+  alpha                    : 0.1
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/F1_alpha_01
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Edge cases: 150,000 rows  →  4,998 sequences  (block=30)
+Total     : 20,687 sequences  (seq_len=30)
+Split     : 16,549 train / 2,069 val / 2,069 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=0.1, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -0.3477 (phys 0.0726 cd -4.2034) | Val -0.4561 | E+=-4.187 E-=4.197 gap=8.384
+  -> Best model saved (val_phys=0.0429)
+  -> Best model saved (val_phys=0.0387)
+  -> Best model saved (val_phys=0.0316)
+  -> Best model saved (val_phys=0.0278)
+  -> Best model saved (val_phys=0.0260)
+  -> Best model saved (val_phys=0.0248)
+Epoch   10/200 | Train -0.4754 (phys 0.0241 cd -4.9954) | Val -0.4747 | E+=-4.995 E-=4.995 gap=9.990
+  -> Best model saved (val_phys=0.0243)
+  -> Best model saved (val_phys=0.0233)
+  -> Best model saved (val_phys=0.0231)
+Epoch   20/200 | Train -0.4730 (phys 0.0268 cd -4.9980) | Val -0.4753 | E+=-4.998 E-=4.998 gap=9.996
+  -> Best model saved (val_phys=0.0227)
+  -> Best model saved (val_phys=0.0223)
+Epoch   30/200 | Train -0.4787 (phys 0.0213 cd -4.9997) | Val -0.4744 | E+=-5.000 E-=5.000 gap=9.999
+  -> Best model saved (val_phys=0.0221)
+  -> Best model saved (val_phys=0.0217)
+  -> Best model saved (val_phys=0.0216)
+Epoch   40/200 | Train -0.4795 (phys 0.0204 cd -4.9998) | Val -0.4784 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0209)
+  -> Best model saved (val_phys=0.0208)
+Epoch   50/200 | Train -0.4805 (phys 0.0195 cd -4.9999) | Val -0.4792 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0204)
+Epoch   60/200 | Train -0.4808 (phys 0.0192 cd -4.9999) | Val -0.4794 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0202)
+  -> Best model saved (val_phys=0.0199)
+Epoch   70/200 | Train -0.4814 (phys 0.0186 cd -4.9999) | Val -0.4798 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0197)
+Epoch   80/200 | Train -0.4816 (phys 0.0184 cd -4.9999) | Val -0.4800 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0195)
+Epoch   90/200 | Train -0.4823 (phys 0.0177 cd -4.9999) | Val -0.4806 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0194)
+  -> Best model saved (val_phys=0.0192)
+Epoch  100/200 | Train -0.4817 (phys 0.0183 cd -4.9999) | Val -0.4802 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  110/200 | Train -0.4825 (phys 0.0175 cd -4.9999) | Val -0.4805 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 111 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/F1_alpha_01/models/last_model.pth
+Best val loss: 0.0192 at epoch 91
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2313 °C
+  Excess O2   RMSE : 0.7057 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/F1_alpha_01/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/F1_alpha_01/history.npz
+wandb: updating run metadata
+wandb: uploading history steps 110-112, summary, console lines 95-106
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▂▂▂▂▂▃▃▃▃▃▃▃▄▄▄▅▅▅▅▅▅▆▆▆▆▆▆▇▇▇▇▇▇▇███
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd ▆█▇▅▇▅▆▅▄▄▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▁
+wandb:   train/cd_gap ▃▅▁▃▄▆▇▆████████████████████████████████
+wandb:    train/e_neg ▁▆▅▅▆▇▇▇▇▇██████████████████████████████
+wandb:    train/e_pos █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▆▇▆▆▇▄▄▄▄▃▃▃▄▃▃▃▃▂▂▂▄▂▂▂▂▂▂▂▂▁▃▃▂▁▁▁▁▁▂
+wandb:  train/physics █▃▂▂▃▂▂▂▂▂▂▁▂▂▂▁▁▁▁▁▁▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:         val/cd ▅▄▅█▂▂▃▁▂▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 91
+wandb: best_val_phys_loss 0.01922
+wandb:      early_stopped True
+wandb:              epoch 111
+wandb:      stopped_epoch 111
+wandb:       test_rmse_o2 0.70572
+wandb:     test_rmse_temp 0.23125
+wandb:           train/cd -4.99994
+wandb:       train/cd_gap 10.00002
+wandb:        train/e_neg 5.00001
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run F1_alpha_01 at: https://wandb.ai/maercaestro/eblnn-ablation/runs/qc6liy5t
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260306_005236-qc6liy5t/logs
+
+⏱  Total wall time: 45868s
+Experiment complete.
+
+
+✅  F1_alpha_01  (45875s)
+
+─────────────────────────────────────────────────────────────────
+  [20/20]  F2_alpha_5  (started 13:37:08)
+─────────────────────────────────────────────────────────────────
+wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/abuhuzaifahbidin/.netrc.
+wandb: Currently logged in as: maercaestro to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: setting up run pt2lv1hp
+wandb: Tracking run with wandb version 0.25.0
+wandb: Run data is saved locally in /home/abuhuzaifahbidin/energy-lnn/eblnn/wandb/run-20260306_133712-pt2lv1hp
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run F2_alpha_5
+wandb: ⭐️ View project at https://wandb.ai/maercaestro/eblnn-ablation
+wandb: 🚀 View run at https://wandb.ai/maercaestro/eblnn-ablation/runs/pt2lv1hp
+
+═════════════════════════════════════════════════════════════════
+  ABLATION EXPERIMENT: F2_alpha_5
+  Alpha = 5.0 (CD-dominant)
+═════════════════════════════════════════════════════════════════
+  alpha                    : 5.0
+  batch_size               : 64
+  buffer_capacity          : 10000
+  buffer_prob              : 0.95
+  clip_x                   : 3.0
+  confidence_filter        : None
+  device                   : cpu
+  early_stopping           : True
+  ebm_hidden_dims          : [128, 64]
+  edge_fraction            : 1.0
+  energy_clamp             : 20.0
+  epochs                   : 200
+  hidden_size              : 128
+  l2_reg                   : 0.1
+  learning_rate            : 0.001
+  margin                   : 0.0
+  min_delta                : 0.0001
+  n_steps                  : 20
+  noise_scale              : 0.005
+  patience                 : 20
+  scenarios                : None
+  seed                     : 42
+  seq_len                  : 30
+  step_size                : 0.01
+  stride                   : 30
+  test_size                : 0.2
+  use_edge                 : True
+  use_real                 : True
+  val_size                 : 0.1
+  device                   : cpu
+  output_dir               : /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/F2_alpha_5
+═════════════════════════════════════════════════════════════════
+
+Real data : 470,676 rows  →  15,689 sequences  (stride=30)
+Edge cases: 150,000 rows  →  4,998 sequences  (block=30)
+Total     : 20,687 sequences  (seq_len=30)
+Split     : 16,549 train / 2,069 val / 2,069 test
+Scaling complete
+DataLoaders ready
+
+EBLNN_Generative — 176,899 total trainable parameters
+  CfC backbone  : 151,808
+  Physics head  : 258
+  EBM head      : 24,833
+  Input size    : 5
+  Hidden size   : 128
+  Phys outputs  : 2  (temp, O2)
+  EBM dims      : [128, 64]
+  Device        : cpu
+
+Starting Generative EB-LNN training  (200 max epochs)
+  alpha=5.0, lr=0.001, l2_reg=0.1
+  Langevin: 20 steps, step_size=0.01, noise_scale=0.005
+  Replay buffer capacity=10000, prob=0.95
+  Early stopping: patience=20
+Epoch    1/200 | Train -22.1634 (phys 0.1142 cd -4.4555) | Val -24.9402 | E+=-4.428 E-=4.451 gap=8.879
+  -> Best model saved (val_phys=0.0461)
+  -> Best model saved (val_phys=0.0375)
+  -> Best model saved (val_phys=0.0306)
+  -> Best model saved (val_phys=0.0283)
+  -> Best model saved (val_phys=0.0273)
+  -> Best model saved (val_phys=0.0263)
+  -> Best model saved (val_phys=0.0255)
+Epoch   10/200 | Train -24.9746 (phys 0.0249 cd -4.9999) | Val -24.9729 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0252)
+  -> Best model saved (val_phys=0.0250)
+  -> Best model saved (val_phys=0.0244)
+  -> Best model saved (val_phys=0.0238)
+Epoch   20/200 | Train -24.9770 (phys 0.0228 cd -5.0000) | Val -24.9766 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0232)
+  -> Best model saved (val_phys=0.0230)
+  -> Best model saved (val_phys=0.0227)
+  -> Best model saved (val_phys=0.0224)
+Epoch   30/200 | Train -24.9776 (phys 0.0219 cd -4.9999) | Val -24.9778 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0221)
+  -> Best model saved (val_phys=0.0220)
+  -> Best model saved (val_phys=0.0217)
+  -> Best model saved (val_phys=0.0215)
+Epoch   40/200 | Train -24.9791 (phys 0.0207 cd -4.9999) | Val -24.9777 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0214)
+Epoch   50/200 | Train -24.9796 (phys 0.0203 cd -5.0000) | Val -24.9782 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0208)
+Epoch   60/200 | Train -24.9801 (phys 0.0198 cd -5.0000) | Val -24.9790 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0205)
+  -> Best model saved (val_phys=0.0204)
+Epoch   70/200 | Train -24.9808 (phys 0.0192 cd -5.0000) | Val -24.9795 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0202)
+Epoch   80/200 | Train -24.9644 (phys 0.0203 cd -4.9969) | Val -24.9761 | E+=-4.999 E-=4.999 gap=9.998
+  -> Best model saved (val_phys=0.0198)
+Epoch   90/200 | Train -24.9817 (phys 0.0182 cd -5.0000) | Val -24.9800 | E+=-5.000 E-=5.000 gap=10.000
+  -> Best model saved (val_phys=0.0196)
+Epoch  100/200 | Train -24.9816 (phys 0.0184 cd -5.0000) | Val -24.9800 | E+=-5.000 E-=5.000 gap=10.000
+Epoch  110/200 | Train -24.9819 (phys 0.0180 cd -5.0000) | Val -24.9799 | E+=-5.000 E-=5.000 gap=10.000
+
+Early stopping at epoch 114 (no improvement for 20 epochs)
+
+Last model saved: /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/F2_alpha_5/models/last_model.pth
+Best val loss: 0.0196 at epoch 94
+
+--- Test Set Evaluation ---
+  Temperature RMSE : 0.2003 °C
+  Excess O2   RMSE : 0.7114 %
+
+✅  Results saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/F2_alpha_5/results.json
+📊  Training history saved to /home/abuhuzaifahbidin/energy-lnn/eblnn/results/ablation/F2_alpha_5/history.npz
+wandb: updating run metadata
+wandb: 
+wandb: Run history:
+wandb:          epoch ▁▁▁▁▂▂▂▂▂▂▃▃▃▃▃▄▄▄▄▄▅▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇▇███
+wandb:   test_rmse_o2 ▁
+wandb: test_rmse_temp ▁
+wandb:       train/cd █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:   train/cd_gap ▃▁█▆█▇▆███████▇█████████████████████████
+wandb:    train/e_neg ▁███████████████████████████████████████
+wandb:    train/e_pos █▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:     train/loss █▆▄▃▄▄▃▃▂▂▂▂▂▂▂▂▂▂▂▁▂▂▁▁▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:  train/physics █▅▄▄▄▄▄▄▃▄▃▃▃▃▃▃▂▃▃▃▂▂▂▂▂▂▂▁▂▂▃▂▁▁▁▁▁▁▁▁
+wandb:         val/cd █▃▃▁▂▃▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:             +3 ...
+wandb: 
+wandb: Run summary:
+wandb:         best_epoch 94
+wandb: best_val_phys_loss 0.01962
+wandb:      early_stopped True
+wandb:              epoch 114
+wandb:      stopped_epoch 114
+wandb:       test_rmse_o2 0.71142
+wandb:     test_rmse_temp 0.20025
+wandb:           train/cd -4.99999
+wandb:       train/cd_gap 10.0
+wandb:        train/e_neg 5.0
+wandb:                 +7 ...
+wandb: 
+wandb: 🚀 View run F2_alpha_5 at: https://wandb.ai/maercaestro/eblnn-ablation/runs/pt2lv1hp
+wandb: ⭐️ View project at: https://wandb.ai/maercaestro/eblnn-ablation
+wandb: Synced 5 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20260306_133712-pt2lv1hp/logs
+
+⏱  Total wall time: 47248s
+Experiment complete.
+
+
+✅  F2_alpha_5  (47255s)
+
+
+═════════════════════════════════════════════════════════════════
+  BATCH COMPLETE  —  20 experiments
+  Finished : 2026-03-07 02:44:43
+  Total wall time : 771799s  (12863.3 min)
+═════════════════════════════════════════════════════════════════
+
+  ✅ Passed: 20    ❌ Failed: 0
+
