@@ -45,6 +45,10 @@ from src.lnn_model import create_lnn_model
 from src.lnn_train import LNNTrainer
 from src.data_real import RealDataPipeline
 
+# Robustness evaluation (forward-pass only, runs after training)
+sys.path.insert(0, str(ROOT / "experiments"))
+from evaluate_robustness import run_robustness_tests
+
 try:
     import wandb
     WANDB_AVAILABLE = True
@@ -248,9 +252,30 @@ def main() -> None:
         target_scaler=pipeline.target_scaler,
     )
 
+    # ── 6. Robustness / OOD tests ────────────────────────────────────
+    print("\nRunning robustness tests (OOD perturbations) ...")
+    robustness = run_robustness_tests(model, pipeline, device)
+    print(f"  {len(robustness) - 1} perturbation tests completed.")
+
+    # Log robustness to W&B (single call + summary for table/bar charts)
+    if use_wandb:
+        rob_flat = {}
+        for test_name, entry in robustness.items():
+            if test_name == "clean":
+                # Log clean baseline metrics
+                for k, v in entry.get("metrics", {}).items():
+                    rob_flat[f"robustness/clean/{k}"] = v
+                continue
+            for k, v in entry.get("degradation", {}).items():
+                rob_flat[f"robustness/{test_name}/{k}"] = v
+            for k, v in entry.get("metrics", {}).items():
+                rob_flat[f"robustness/{test_name}/{k}"] = v
+        wandb.log(rob_flat)
+        wandb.run.summary.update(rob_flat)
+
     elapsed = time.time() - t0
 
-    # ── 6. Collect & save results ────────────────────────────────────
+    # ── 7. Collect & save results ────────────────────────────────────
     results = {
         "experiment": cfg["experiment"],
         "description": cfg["description"],
@@ -274,6 +299,7 @@ def main() -> None:
         },
         "wall_time_sec": round(elapsed, 1),
         "device": device,
+        "robustness": robustness,
     }
 
     results_path = output_dir / "results.json"
@@ -288,7 +314,7 @@ def main() -> None:
     )
     print(f"📊  Training history saved to {history_path}")
 
-    # ── 7. Close W&B ─────────────────────────────────────────────────
+    # ── 8. Close W&B ─────────────────────────────────────────────────
     if use_wandb:
         wandb.log({"wall_time_sec": elapsed})
         wandb.run.summary.update(test_metrics)
