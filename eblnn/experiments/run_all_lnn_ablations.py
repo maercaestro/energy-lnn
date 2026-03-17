@@ -62,14 +62,20 @@ def main() -> None:
                    help="Print commands without executing")
     p.add_argument("--skip_existing", action="store_true",
                    help="Skip experiments that already have results.json")
+    p.add_argument("--seeds", type=int, nargs="+", default=None,
+                   help="Run each experiment with these seeds (e.g. --seeds 42 123 456)")
     args = p.parse_args()
 
     experiments = load_experiments(args.axis)
+    seeds = args.seeds or [None]   # None = use config default (42)
+    total_runs = len(experiments) * len(seeds)
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     wandb_status = "OFF" if args.no_wandb else "ON"
 
     print(f"\n{'═' * 65}", flush=True)
-    print(f"  LNN ABLATION BATCH  —  {len(experiments)} experiments", flush=True)
+    print(f"  LNN ABLATION BATCH  —  {len(experiments)} experiments × {len(seeds)} seed(s) = {total_runs} runs", flush=True)
+    if args.seeds:
+        print(f"  Seeds   : {seeds}", flush=True)
     print(f"  Started : {ts}", flush=True)
     print(f"  W&B     : {wandb_status}", flush=True)
     print(f"{'═' * 65}\n", flush=True)
@@ -80,38 +86,46 @@ def main() -> None:
     if args.dry_run:
         print("[dry run] Commands that would be executed:\n", flush=True)
         for name in experiments:
-            cmd = _build_cmd(name, args)
-            print(f"  {' '.join(cmd)}\n", flush=True)
+            for seed in seeds:
+                cmd = _build_cmd(name, args, seed)
+                print(f"  {' '.join(cmd)}\n", flush=True)
         return
 
     results_summary: list[dict] = []
     t0_all = time.time()
+    run_idx = 0
 
-    for i, name in enumerate(experiments, 1):
-        if args.skip_existing:
-            rpath = ROOT / "results" / "lnn_ablation" / name / "results.json"
-            if rpath.exists():
-                print(f"\n[{i}/{len(experiments)}] SKIP {name} (results.json exists)", flush=True)
-                continue
+    for name in experiments:
+        for seed in seeds:
+            run_idx += 1
+            seed_tag = f" (seed={seed})" if seed is not None else ""
+            seed_suffix = f"_seed{seed}" if seed is not None else ""
 
-        ts_now = datetime.now().strftime("%H:%M:%S")
-        print(f"\n{'─' * 65}", flush=True)
-        print(f"  [{i}/{len(experiments)}]  {name}  (started {ts_now})", flush=True)
-        print(f"{'─' * 65}", flush=True)
+            if args.skip_existing:
+                rpath = ROOT / "results" / "lnn_ablation" / (name + seed_suffix) / "results.json"
+                if rpath.exists():
+                    print(f"\n[{run_idx}/{total_runs}] SKIP {name}{seed_tag} (results.json exists)", flush=True)
+                    continue
 
-        cmd = _build_cmd(name, args)
-        t0 = time.time()
-        ret = subprocess.run(cmd, cwd=str(ROOT))
-        elapsed = time.time() - t0
+            ts_now = datetime.now().strftime("%H:%M:%S")
+            print(f"\n{'─' * 65}", flush=True)
+            print(f"  [{run_idx}/{total_runs}]  {name}{seed_tag}  (started {ts_now})", flush=True)
+            print(f"{'─' * 65}", flush=True)
 
-        results_summary.append({
-            "experiment": name,
-            "return_code": ret.returncode,
-            "wall_time_sec": round(elapsed, 1),
-        })
+            cmd = _build_cmd(name, args, seed)
+            t0 = time.time()
+            ret = subprocess.run(cmd, cwd=str(ROOT))
+            elapsed = time.time() - t0
 
-        status = "✅" if ret.returncode == 0 else "❌"
-        print(f"\n{status}  {name}  ({elapsed:.0f}s)", flush=True)
+            results_summary.append({
+                "experiment": name,
+                "seed": seed,
+                "return_code": ret.returncode,
+                "wall_time_sec": round(elapsed, 1),
+            })
+
+            status = "✅" if ret.returncode == 0 else "❌"
+            print(f"\n{status}  {name}{seed_tag}  ({elapsed:.0f}s)", flush=True)
 
     # ── Summary ──────────────────────────────────────────────────────
     total_time = time.time() - t0_all
@@ -134,12 +148,14 @@ def main() -> None:
         print(flush=True)
 
 
-def _build_cmd(name: str, args) -> list[str]:
+def _build_cmd(name: str, args, seed: int | None = None) -> list[str]:
     cmd = [sys.executable, "-u", str(RUNNER), "--experiment", name]
     if args.no_wandb:
         cmd.append("--no_wandb")
     if args.data_dir:
         cmd += ["--data_dir", args.data_dir]
+    if seed is not None:
+        cmd += ["--seed", str(seed)]
     return cmd
 
 

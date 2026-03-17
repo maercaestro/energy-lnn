@@ -211,17 +211,33 @@ class LNNTrainer:
             y_true = target_scaler.inverse_transform(y_true)
             y_pred = target_scaler.inverse_transform(y_pred)
 
-        rmse_temp = float(np.sqrt(np.mean((y_pred[:, 0] - y_true[:, 0]) ** 2)))
-        rmse_o2   = float(np.sqrt(np.mean((y_pred[:, 1] - y_true[:, 1]) ** 2)))
+        metrics = {}
+        col_names = ["temp", "o2"]
+        for i, col in enumerate(col_names):
+            err = y_pred[:, i] - y_true[:, i]
+            abs_err = np.abs(err)
+            # Avoid division by zero for MAPE
+            nonzero = np.abs(y_true[:, i]) > 1e-8
+            mape = float(np.mean(abs_err[nonzero] / np.abs(y_true[:, i][nonzero])) * 100) if nonzero.any() else float("nan")
+            ss_res = np.sum(err ** 2)
+            ss_tot = np.sum((y_true[:, i] - np.mean(y_true[:, i])) ** 2)
+            r2 = float(1 - ss_res / ss_tot) if ss_tot > 0 else float("nan")
 
-        metrics = {
-            "test_rmse_temp": rmse_temp,
-            "test_rmse_o2":   rmse_o2,
-        }
+            metrics[f"test_rmse_{col}"] = float(np.sqrt(np.mean(err ** 2)))
+            metrics[f"test_mae_{col}"]  = float(np.mean(abs_err))
+            metrics[f"test_mape_{col}"] = mape
+            metrics[f"test_r2_{col}"]   = r2
+            metrics[f"test_max_ae_{col}"] = float(np.max(abs_err))
 
         print("\n--- Test Set Evaluation ---")
-        print(f"  Temperature RMSE : {rmse_temp:.4f} °C")
-        print(f"  Excess O2   RMSE : {rmse_o2:.4f} %")
+        for col in col_names:
+            label = "Temperature" if col == "temp" else "Excess O2  "
+            unit  = "°C" if col == "temp" else "%"
+            print(f"  {label} RMSE   : {metrics[f'test_rmse_{col}']:.4f} {unit}")
+            print(f"  {label} MAE    : {metrics[f'test_mae_{col}']:.4f} {unit}")
+            print(f"  {label} MAPE   : {metrics[f'test_mape_{col}']:.2f} %")
+            print(f"  {label} R²     : {metrics[f'test_r2_{col}']:.4f}")
+            print(f"  {label} MaxAE  : {metrics[f'test_max_ae_{col}']:.4f} {unit}")
 
         if self.use_wandb:
             wandb.log(metrics)

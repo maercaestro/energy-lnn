@@ -1,0 +1,11 @@
+{
+  "n_samples": 50000,
+  "alpha": 0.01,
+  "n_edges_partial_corr": 19,
+  "n_edges_granger": 16,
+  "n_edges_transfer_entropy": 10,
+  "n_edges_consensus": 18,
+  "ground_truth_recovered": 3,
+  "ground_truth_total": 7,
+  "recovery_rate": 0.42857142857142855
+}
