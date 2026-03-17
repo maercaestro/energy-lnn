@@ -109,6 +109,10 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument("--no_wandb", action="store_true", help="Disable W&B")
     p.add_argument("--list", action="store_true", help="List experiments and exit")
+    p.add_argument(
+        "--seed", type=int, default=None,
+        help="Override seed (for multi-seed runs)",
+    )
     return p.parse_args()
 
 
@@ -129,6 +133,10 @@ def main() -> None:
     # ── Resolve experiment ───────────────────────────────────────────
     cfg = resolve_experiment(raw_cfg, args.experiment)
 
+    # ── Seed override (for multi-seed runs) ──────────────────────────
+    if args.seed is not None:
+        cfg["seed"] = args.seed
+
     # ── Resolve data paths ───────────────────────────────────────────
     data_dir = Path(args.data_dir) if args.data_dir else (ROOT.parent / "dataset")
     real_csv = (
@@ -143,8 +151,9 @@ def main() -> None:
     )
 
     # ── Resolve output path ──────────────────────────────────────────
+    seed_suffix = f"_seed{cfg['seed']}" if args.seed is not None else ""
     output_dir = Path(args.output_dir) if args.output_dir else (
-        ROOT / "results" / "lnn_ablation" / cfg["experiment"]
+        ROOT / "results" / "lnn_ablation" / (cfg["experiment"] + seed_suffix)
     )
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -154,10 +163,11 @@ def main() -> None:
 
     # ── W&B ──────────────────────────────────────────────────────────
     use_wandb = not args.no_wandb and WANDB_AVAILABLE
+    run_name = cfg["experiment"] + (f"_s{cfg['seed']}" if args.seed is not None else "")
     if use_wandb:
         wandb.init(
             project="lnn-ablation",
-            name=cfg["experiment"],
+            name=run_name,
             group="lnn-ablation",
             tags=["lnn-ablation", cfg["experiment"].split("_")[0]],
             config=cfg,
@@ -175,6 +185,13 @@ def main() -> None:
     print(f"  {'device':25s}: {device}")
     print(f"  {'output_dir':25s}: {output_dir}")
     print("═" * 65 + "\n")
+
+    # ── Set global seed ──────────────────────────────────────────────
+    seed = cfg["seed"]
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
     t0 = time.time()
 
