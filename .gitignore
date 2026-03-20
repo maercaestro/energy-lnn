@@ -88,6 +88,7 @@ dataset/checkpoints_v2/
 
 # ── Ablation results (regenerated on each run) ──────────────────
 eblnn/results/ablation/
+eblnn/results/lnn_ablation/**/models/
 eblnn/data/
 
 # ── Plots (regenerated) ─────────────────────────────────────────
