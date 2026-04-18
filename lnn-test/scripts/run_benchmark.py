@@ -17,8 +17,10 @@ from src.data import RealDataPipeline
 from src.evaluate import (
     compute_regression_metrics,
     run_disturbance_evaluation,
+    run_extreme_evaluation,
     run_safety_evaluation,
     summarize_disturbance_results,
+    summarize_extreme_results,
     summarize_safety_results,
 )
 from src.models import create_model
@@ -180,6 +182,14 @@ def main() -> None:
             disturbance_summary = summarize_disturbance_results(disturbance)
             safety_summary = summarize_safety_results(safety)
 
+            extreme = run_extreme_evaluation(
+                model=trainer.model,
+                loader=pipeline.test_loader,
+                device=device,
+                target_scaler=pipeline.target_scaler,
+            )
+            extreme_summary = summarize_extreme_results(extreme)
+
             result = {
                 "model": model_name,
                 "seed": seed,
@@ -209,6 +219,8 @@ def main() -> None:
                 "disturbance_summary": disturbance_summary,
                 "safety": safety,
                 "safety_summary": safety_summary,
+                "extreme": extreme,
+                "extreme_summary": extreme_summary,
                 "wall_time_sec": round(time.time() - start_time, 2),
             }
 

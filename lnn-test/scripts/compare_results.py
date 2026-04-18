@@ -89,6 +89,26 @@ def build_summary(runs: Dict[str, List[dict]]) -> Dict[str, dict]:
             "throughput": [run.get("inference", {}).get("throughput_samples_per_sec", float("nan")) for run in model_runs],
         }
 
+        # Extreme test summaries
+        extreme_keys = [
+            "multi_drop_abs_temp", "multi_drop_abs_o2",
+            "drift_abs_temp", "drift_abs_o2",
+            "stuck_abs_temp", "stuck_abs_o2",
+            "oscillation_abs_temp", "oscillation_abs_o2",
+            "intermittent_abs_temp", "intermittent_abs_o2",
+            "combined_abs_temp", "combined_abs_o2",
+            "extreme_extrap_abs_temp", "extreme_extrap_abs_o2",
+            "extreme_noise_abs_temp", "extreme_noise_abs_o2",
+            "multi_drop_critical", "drift_critical",
+            "stuck_critical", "combined_critical",
+            "overall_extreme_abs_temp", "overall_extreme_abs_o2",
+            "overall_extreme_critical",
+        ]
+        for ek in extreme_keys:
+            summary[model_name][ek] = [
+                run.get("extreme_summary", {}).get(ek, float("nan")) for run in model_runs
+            ]
+
         # Per-disturbance-category means (from raw disturbance dict)
         categories = {
             "noise": lambda k: k.startswith("noise_sigma_"),
@@ -98,17 +118,43 @@ def build_summary(runs: Dict[str, List[dict]]) -> Dict[str, dict]:
             "extrap": lambda k: k.startswith("extrap_"),
             "scale": lambda k: k.startswith("scale_"),
         }
+        # Realistic = process-level (dropout, scale, extrapolation)
+        # Synthetic = sensor-level (noise, spike, shuffle)
+        realistic_filter = lambda k: (k.startswith("dropout_") or k.startswith("scale_")
+                                      or k.startswith("extrap_"))
+        synthetic_filter = lambda k: (k.startswith("noise_sigma_") or k.startswith("spike_")
+                                      or k == "temporal_shuffle")
+
         for cat_name, cat_filter in categories.items():
             cat_deg_temp = []
             cat_deg_o2 = []
+            cat_abs_temp = []
+            cat_abs_o2 = []
             for run in model_runs:
                 disturbance_raw = run["disturbance"]
                 keys = [k for k in disturbance_raw if k != "clean" and cat_filter(k)]
                 if keys:
                     cat_deg_temp.append(mean(disturbance_raw[k]["degradation"]["rmse_temp"] for k in keys))
                     cat_deg_o2.append(mean(disturbance_raw[k]["degradation"]["rmse_o2"] for k in keys))
+                    cat_abs_temp.append(mean(disturbance_raw[k]["metrics"]["rmse_temp"] for k in keys))
+                    cat_abs_o2.append(mean(disturbance_raw[k]["metrics"]["rmse_o2"] for k in keys))
             summary[model_name][f"cat_{cat_name}_deg_temp"] = cat_deg_temp
             summary[model_name][f"cat_{cat_name}_deg_o2"] = cat_deg_o2
+            summary[model_name][f"cat_{cat_name}_abs_temp"] = cat_abs_temp
+            summary[model_name][f"cat_{cat_name}_abs_o2"] = cat_abs_o2
+
+        # Grouped absolute perturbed RMSE: realistic vs synthetic
+        for group_name, group_filter in [("realistic", realistic_filter), ("synthetic", synthetic_filter)]:
+            grp_abs_temp = []
+            grp_abs_o2 = []
+            for run in model_runs:
+                disturbance_raw = run["disturbance"]
+                keys = [k for k in disturbance_raw if k != "clean" and group_filter(k)]
+                if keys:
+                    grp_abs_temp.append(mean(disturbance_raw[k]["metrics"]["rmse_temp"] for k in keys))
+                    grp_abs_o2.append(mean(disturbance_raw[k]["metrics"]["rmse_o2"] for k in keys))
+            summary[model_name][f"{group_name}_abs_temp"] = grp_abs_temp
+            summary[model_name][f"{group_name}_abs_o2"] = grp_abs_o2
 
     return summary
 
@@ -118,21 +164,24 @@ def build_summary(runs: Dict[str, List[dict]]) -> Dict[str, dict]:
 # ─────────────────────────────────────────────────────────────────────
 
 RANKING_WEIGHTS = {
-    # Accuracy (40%)
+    # Accuracy (50%)
     "temp_rmse": 0.15,
     "o2_rmse": 0.15,
-    "temp_r2": 0.05,       # inverted (higher = better)
-    "o2_r2": 0.05,         # inverted
-    # Disturbance robustness (35%)
-    "noise_deg_temp": 0.10,
-    "noise_deg_o2": 0.10,
-    "overall_deg_temp": 0.075,
-    "overall_deg_o2": 0.075,
-    # Safety stability (25%)
-    "noise_critical": 0.10,
-    "noise_total": 0.05,
-    "overall_critical": 0.05,
-    "overall_total": 0.05,
+    "temp_r2": 0.10,       # inverted (higher = better)
+    "o2_r2": 0.10,         # inverted
+    # Disturbance robustness — absolute perturbed RMSE (30%)
+    # Realistic process disturbances weighted 2× synthetic
+    "realistic_abs_temp": 0.08,
+    "realistic_abs_o2": 0.08,
+    "synthetic_abs_temp": 0.04,
+    "synthetic_abs_o2": 0.04,
+    # Not used (keep for back-compat in normalised dict):
+    # "noise_deg_temp", "overall_deg_temp" etc. removed
+    # Safety stability (20%)
+    "noise_critical": 0.08,
+    "noise_total": 0.04,
+    "overall_critical": 0.04,
+    "overall_total": 0.04,
 }
 
 HIGHER_IS_BETTER = {"temp_r2", "o2_r2"}
@@ -235,24 +284,28 @@ def build_markdown(summary: Dict[str, dict], scores: Dict[str, dict] | None = No
 
     lines.append("")
 
-    # ── Table 2: Disturbance robustness ──
+    # ── Table 2: Disturbance robustness — absolute perturbed RMSE ──
     lines.extend([
-        "## Table 2 — Disturbance Robustness (degradation ratio, 1.0× = no change)",
+        "## Table 2 — Disturbance Robustness (absolute perturbed RMSE)",
         "",
-        "| Model | Noise Deg Temp | Noise Deg O₂ | Overall Deg Temp | Overall Deg O₂ |",
+        "Realistic = process-level disturbances (sensor dropout, feature scaling, extrapolation).",
+        "Synthetic = sensor-level disturbances (Gaussian noise, spike injection, temporal shuffle).",
+        "Lower = more robust.",
+        "",
+        "| Model | Realistic Temp | Realistic O₂ | Synthetic Temp | Synthetic O₂ |",
         "| :--- | ---: | ---: | ---: | ---: |",
     ])
-    deg_keys = ["noise_deg_temp", "noise_deg_o2", "overall_deg_temp", "overall_deg_o2"]
-    best_deg = {k: _best_model_for(summary, k) for k in deg_keys}
+    abs_keys = ["realistic_abs_temp", "realistic_abs_o2", "synthetic_abs_temp", "synthetic_abs_o2"]
+    best_abs = {k: _best_model_for(summary, k) for k in abs_keys}
 
     for model_name, row in sorted(summary.items()):
-        def _dcell(key: str) -> str:
+        def _acell(key: str) -> str:
             val = format_mean_std(row[key])
-            return f"**{val}**" if model_name == best_deg[key] else val
+            return f"**{val}**" if model_name == best_abs[key] else val
 
         lines.append(
-            f"| {model_name.upper()} | {_dcell('noise_deg_temp')} | {_dcell('noise_deg_o2')} | "
-            f"{_dcell('overall_deg_temp')} | {_dcell('overall_deg_o2')} |"
+            f"| {model_name.upper()} | {_acell('realistic_abs_temp')} | {_acell('realistic_abs_o2')} | "
+            f"{_acell('synthetic_abs_temp')} | {_acell('synthetic_abs_o2')} |"
         )
 
     lines.append("")
@@ -288,7 +341,7 @@ def build_markdown(summary: Dict[str, dict], scores: Dict[str, dict] | None = No
         lines.extend([
             "## Table 4 — Composite Ranking",
             "",
-            "Weighted score combining accuracy (40%), disturbance robustness (35%), and safety stability (25%).",
+            "Weighted score combining accuracy (50%), disturbance robustness (30% — realistic 2×, absolute RMSE), and safety (20%).",
             "Lower score = better overall.",
             "",
             "| Rank | Model | Composite Score |",
@@ -432,6 +485,74 @@ def build_markdown(summary: Dict[str, dict], scores: Dict[str, dict] | None = No
             cells.append(val)
         lines.append(f"| {model_name.upper()} | " + " | ".join(cells) + " |")
     lines.append("")
+
+    # ── Table 9: Extreme Stress Tests — Absolute Perturbed RMSE ──
+    extreme_cats = [
+        ("Multi-Sensor Drop", "multi_drop_abs_temp", "multi_drop_abs_o2"),
+        ("Sensor Drift", "drift_abs_temp", "drift_abs_o2"),
+        ("Stuck Sensor", "stuck_abs_temp", "stuck_abs_o2"),
+        ("Oscillation", "oscillation_abs_temp", "oscillation_abs_o2"),
+        ("Intermittent", "intermittent_abs_temp", "intermittent_abs_o2"),
+        ("Combined Attack", "combined_abs_temp", "combined_abs_o2"),
+        ("Extreme Extrap (5–10σ)", "extreme_extrap_abs_temp", "extreme_extrap_abs_o2"),
+        ("Extreme Noise (3–5σ)", "extreme_noise_abs_temp", "extreme_noise_abs_o2"),
+    ]
+    # Only emit if extreme data exists
+    has_extreme = any(
+        not all(v != v for v in summary[m].get("overall_extreme_abs_temp", [float("nan")]))
+        for m in summary
+    )
+    if has_extreme:
+        lines.extend([
+            "## Table 9 — Extreme Stress Tests (absolute perturbed RMSE)",
+            "",
+            "Realistic refinery failure scenarios. Lower = more robust.",
+            "",
+        ])
+        # Build header
+        hdr_cols = []
+        for label, _, _ in extreme_cats:
+            hdr_cols.extend([f"{label} Temp", f"{label} O₂"])
+        lines.append("| Model | " + " | ".join(hdr_cols) + " |")
+        lines.append("| :--- | " + " | ".join(["---:"] * len(hdr_cols)) + " |")
+
+        # Best per column
+        all_keys = []
+        for _, kt, ko in extreme_cats:
+            all_keys.extend([kt, ko])
+        ext_best = {k: _best_model_for(summary, k) for k in all_keys}
+
+        for model_name, row in sorted(summary.items()):
+            cells = []
+            for _, kt, ko in extreme_cats:
+                for k in [kt, ko]:
+                    val = format_mean_std(row.get(k, []))
+                    if model_name == ext_best[k]:
+                        val = f"**{val}**"
+                    cells.append(val)
+            lines.append(f"| {model_name.upper()} | " + " | ".join(cells) + " |")
+        lines.append("")
+
+        # ── Table 10: Extreme Safety ──
+        lines.extend([
+            "## Table 10 — Safety Under Extreme Conditions (critical violation rate)",
+            "",
+            "| Model | Multi-Sensor Drop | Sensor Drift | Stuck Sensor | Combined Attack | Overall Extreme |",
+            "| :--- | ---: | ---: | ---: | ---: | ---: |",
+        ])
+        safety_ext_keys = ["multi_drop_critical", "drift_critical", "stuck_critical",
+                           "combined_critical", "overall_extreme_critical"]
+        ext_safety_best = {k: _best_model_for(summary, k) for k in safety_ext_keys}
+
+        for model_name, row in sorted(summary.items()):
+            cells = []
+            for k in safety_ext_keys:
+                val = format_mean_std(row.get(k, []))
+                if model_name == ext_safety_best[k]:
+                    val = f"**{val}**"
+                cells.append(val)
+            lines.append(f"| {model_name.upper()} | " + " | ".join(cells) + " |")
+        lines.append("")
 
     lines.extend([
         "---",
