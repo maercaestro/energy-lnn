@@ -1,0 +1,71 @@
+run_name: default
+
+wandb:
+  enabled: true            # set false to disable wandb entirely
+  project: eblnn-benchmark
+  entity: null             # null -> use default wandb entity
+  mode: online             # online | offline | disabled
+  group: null              # null -> auto-set to run_name
+  tags: [eblnn, lnn, lstm, pid, furnace]
+
+experiment:
+  seeds: [42, 123, 456]
+  models: [eblnn, lnn, lstm, pid]
+  device: auto
+
+data:
+  real_csv: ../dataset/real_furnace_eblnn.csv
+  edge_csv: ../dataset/edge_cases_v2_eblnn.csv
+  seq_len: 30
+  stride: 30
+  batch_size: 64
+  test_size: 0.2
+  val_size: 0.1
+  edge_fraction: 1.0
+  scenarios: null
+  confidence_filter: null
+
+training:
+  epochs: 200
+  learning_rate: 0.001
+  patience: 20
+  min_delta: 0.0001
+  early_stopping: true
+
+# EB-LNN specific (Contrastive Divergence + Langevin)
+eblnn:
+  alpha: 1.0            # weight on the CD loss term
+  l2_reg: 0.01          # energy magnitude regularisation
+  margin: 0.0           # CD hinge margin (0 = standard CD)
+  energy_clamp: 20.0    # hard clip on |energy|
+  buffer_capacity: 10000
+  buffer_prob: 0.95
+  langevin:
+    n_steps: 20
+    step_size: 0.01
+    noise_scale: 0.005
+    clip_x: 3.0
+
+# PID gain-search grids (operates in physical units)
+pid:
+  setpoint_temp: null   # if null, use mean(next_temp) on train split
+  setpoint_o2: null     # if null, use mean(next_excess_o2) on train split
+  afr_setpoint: null    # if null, use mean(air_fuel_ratio) on train split
+  kp_temp_grid: [0.0, 0.25, 0.5, 0.75, 1.0]
+  ki_temp_grid: [0.0, 0.05, 0.1]
+  kd_temp_grid: [0.0, 0.05, 0.1]
+  kp_o2_grid:   [0.0, 0.25, 0.5, 1.0, 1.5, 2.0]
+
+models:
+  eblnn:
+    hidden_size: 128
+    ebm_hidden_dims: [128, 64]
+    mixed_memory: true
+  lnn:
+    hidden_size: 128
+    mixed_memory: true
+  lstm:
+    hidden_size: 128
+    num_layers: 2
+    dropout: 0.1
+  pid: {}

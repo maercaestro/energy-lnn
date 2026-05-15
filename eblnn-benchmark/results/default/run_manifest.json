@@ -1,0 +1,17 @@
+{
+  "run_name": "default",
+  "models": [
+    "lstm"
+  ],
+  "seeds": [
+    42
+  ],
+  "device": "cpu",
+  "runs": [
+    {
+      "model": "lstm",
+      "seed": 42,
+      "results_path": "/Users/abuhuzaifahbidin/Documents/GitHub/energy-lnn/eblnn-benchmark/results/default/lstm/seed_42/results.json"
+    }
+  ]
+}
