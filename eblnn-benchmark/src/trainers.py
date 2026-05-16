@@ -62,6 +62,7 @@ class SupervisedTrainer:
         self.patience = config.get("patience", 20)
         self.min_delta = config.get("min_delta", 1e-4)
         self.early_stopping = config.get("early_stopping", True)
+        self.heartbeat = int(config.get("heartbeat", 0))
 
         self.criterion = nn.MSELoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
@@ -73,10 +74,13 @@ class SupervisedTrainer:
         self.best_state_dict: Optional[dict] = None
         self.best_model_path: Optional[str] = None
 
-    def _train_epoch(self, loader: DataLoader) -> float:
+    def _train_epoch(self, loader: DataLoader, log_prefix: str = "",
+                     heartbeat: int = 0, epoch: int = 0) -> float:
         self.model.train()
         total_loss = 0.0
-        for x_batch, y_batch in loader:
+        n_batches = len(loader)
+        t0 = time.time()
+        for i, (x_batch, y_batch) in enumerate(loader, start=1):
             x_batch = x_batch.to(self.device)
             y_batch = y_batch.to(self.device)
             pred, _ = self.model(x_batch)
@@ -86,7 +90,15 @@ class SupervisedTrainer:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             self.optimizer.step()
             total_loss += loss.item()
-        return total_loss / len(loader)
+            if heartbeat and (i % heartbeat == 0 or i == n_batches):
+                print(
+                    f"{log_prefix}  ep{epoch:3d} batch {i:4d}/{n_batches}  "
+                    f"loss={loss.item():.5f}  "
+                    f"avg={total_loss / i:.5f}  "
+                    f"dt={time.time() - t0:.1f}s",
+                    flush=True,
+                )
+        return total_loss / n_batches
 
     def _validate(self, loader: DataLoader) -> float:
         self.model.eval()
@@ -114,7 +126,10 @@ class SupervisedTrainer:
         t0 = time.time()
         for epoch in range(self.epochs):
             ep_t0 = time.time()
-            train_loss = self._train_epoch(train_loader)
+            train_loss = self._train_epoch(
+                train_loader, log_prefix=log_prefix,
+                heartbeat=self.heartbeat, epoch=epoch + 1,
+            )
             val_loss = self._validate(val_loader)
 
             self.history["train_loss"].append(train_loss)
@@ -222,6 +237,7 @@ class CDTrainer:
         self.patience = config.get("patience", 20)
         self.min_delta = config.get("min_delta", 1e-4)
         self.early_stopping = config.get("early_stopping", True)
+        self.heartbeat = int(config.get("heartbeat", 0))
 
         self.alpha = eblnn_cfg.get("alpha", 1.0)
         self.l2_reg = eblnn_cfg.get("l2_reg", 0.01)
@@ -282,12 +298,15 @@ class CDTrainer:
 
     # ------------------------------------------------------------------
 
-    def _train_epoch(self, loader: DataLoader) -> Dict[str, float]:
+    def _train_epoch(self, loader: DataLoader, log_prefix: str = "",
+                     heartbeat: int = 0, epoch: int = 0) -> Dict[str, float]:
         self.model.train()
         totals = {"loss": 0.0, "phys": 0.0, "cd": 0.0,
                   "e_pos": 0.0, "e_neg": 0.0, "cd_gap": 0.0}
+        n_batches = len(loader)
+        t0 = time.time()
 
-        for x_pos, y_pos in loader:
+        for i, (x_pos, y_pos) in enumerate(loader, start=1):
             x_pos = x_pos.to(self.device)
             y_pos = y_pos.to(self.device)
             B = x_pos.size(0)
@@ -313,7 +332,17 @@ class CDTrainer:
             totals["e_neg"]  += metrics["e_neg"]
             totals["cd_gap"] += metrics["cd_gap"]
 
-        n = len(loader)
+            if heartbeat and (i % heartbeat == 0 or i == n_batches):
+                print(
+                    f"{log_prefix}  ep{epoch:3d} batch {i:4d}/{n_batches}  "
+                    f"phys={metrics['loss_physics']:.5f}  "
+                    f"cd={metrics['loss_cd']:+.4f}  "
+                    f"e+={metrics['e_pos']:+.3f} e-={metrics['e_neg']:+.3f}  "
+                    f"dt={time.time() - t0:.1f}s",
+                    flush=True,
+                )
+
+        n = n_batches
         return {k: v / n for k, v in totals.items()}
 
     def _validate(self, loader: DataLoader) -> Dict[str, float]:
@@ -357,7 +386,10 @@ class CDTrainer:
         t0 = time.time()
         for epoch in range(self.epochs):
             ep_t0 = time.time()
-            tr = self._train_epoch(train_loader)
+            tr = self._train_epoch(
+                train_loader, log_prefix=log_prefix,
+                heartbeat=self.heartbeat, epoch=epoch + 1,
+            )
             va = self._validate(val_loader)
 
             self.history["train_loss"].append(tr["loss"])
