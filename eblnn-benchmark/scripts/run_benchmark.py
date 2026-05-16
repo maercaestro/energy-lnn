@@ -141,6 +141,10 @@ def main() -> None:
             # ---- wandb run (one per (model, seed)) ----
             wb_run = None
             if use_wandb:
+                wb_settings = wandb.Settings(
+                    console="wrap",          # capture stdout/stderr into wandb Logs
+                    _disable_stats=False,
+                )
                 wb_run = wandb.init(
                     project=wandb_cfg.get("project", "eblnn-benchmark"),
                     entity=wandb_cfg.get("entity"),
@@ -150,6 +154,7 @@ def main() -> None:
                     name=f"{run_name}-{model_name}-seed{seed}",
                     tags=wandb_cfg.get("tags"),
                     reinit=True,
+                    settings=wb_settings,
                     config={
                         "run_name": run_name,
                         "model": model_name,
@@ -207,11 +212,20 @@ def main() -> None:
                     return
                 _wb.log({f"{_m}/{k}": v for k, v in metrics.items()}, step=epoch)
 
+            log_prefix = f"[{model_name} seed={seed}] "
+            print(
+                f"\n>>> training {model_name} seed={seed} "
+                f"(device={device}, params={param_count})",
+                flush=True,
+            )
+
             trainer.train(
                 train_loader=pipeline.train_loader,
                 val_loader=pipeline.val_loader,
                 save_path=str(model_dir),
                 epoch_callback=_epoch_cb,
+                log_prefix=log_prefix,
+                verbose=True,
             )
             trainer.load_best_model()
 

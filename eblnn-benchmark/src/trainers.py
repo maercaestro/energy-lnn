@@ -20,6 +20,7 @@ from __future__ import annotations
 import copy
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Callable, Dict, Optional, Tuple
 
@@ -104,18 +105,23 @@ class SupervisedTrainer:
         val_loader: DataLoader,
         save_path: str,
         epoch_callback: Optional[Callable[[int, Dict[str, float]], None]] = None,
+        log_prefix: str = "",
+        verbose: bool = True,
     ) -> None:
         os.makedirs(save_path, exist_ok=True)
         self.best_model_path = os.path.join(save_path, "best_model.pth")
 
+        t0 = time.time()
         for epoch in range(self.epochs):
+            ep_t0 = time.time()
             train_loss = self._train_epoch(train_loader)
             val_loss = self._validate(val_loader)
 
             self.history["train_loss"].append(train_loss)
             self.history["val_loss"].append(val_loss)
 
-            if val_loss < self.best_val_loss - self.min_delta:
+            improved = val_loss < self.best_val_loss - self.min_delta
+            if improved:
                 self.best_val_loss = val_loss
                 self.best_epoch = epoch + 1
                 self.epochs_no_improve = 0
@@ -123,6 +129,17 @@ class SupervisedTrainer:
                 torch.save(self.best_state_dict, self.best_model_path)
             else:
                 self.epochs_no_improve += 1
+
+            if verbose:
+                tag = "*" if improved else " "
+                print(
+                    f"{log_prefix}epoch {epoch + 1:3d}/{self.epochs} {tag} "
+                    f"train={train_loss:.5f}  val={val_loss:.5f}  "
+                    f"best={self.best_val_loss:.5f}@{self.best_epoch}  "
+                    f"pat={self.epochs_no_improve}/{self.patience}  "
+                    f"dt={time.time() - ep_t0:.1f}s  elapsed={time.time() - t0:.0f}s",
+                    flush=True,
+                )
 
             if epoch_callback is not None:
                 epoch_callback(epoch + 1, {
@@ -133,6 +150,12 @@ class SupervisedTrainer:
                 })
 
             if self.early_stopping and self.epochs_no_improve >= self.patience:
+                if verbose:
+                    print(
+                        f"{log_prefix}early stop at epoch {epoch + 1} "
+                        f"(best val={self.best_val_loss:.5f} @ {self.best_epoch})",
+                        flush=True,
+                    )
                 break
 
         torch.save(self.model.state_dict(), os.path.join(save_path, "last_model.pth"))
@@ -325,11 +348,15 @@ class CDTrainer:
         val_loader: DataLoader,
         save_path: str,
         epoch_callback: Optional[Callable[[int, Dict[str, float]], None]] = None,
+        log_prefix: str = "",
+        verbose: bool = True,
     ) -> None:
         os.makedirs(save_path, exist_ok=True)
         self.best_model_path = os.path.join(save_path, "best_model.pth")
 
+        t0 = time.time()
         for epoch in range(self.epochs):
+            ep_t0 = time.time()
             tr = self._train_epoch(train_loader)
             va = self._validate(val_loader)
 
@@ -344,7 +371,8 @@ class CDTrainer:
             self.history["cd_gap"].append(tr["cd_gap"])
 
             checkpoint_metric = va["phys"]
-            if checkpoint_metric < self.best_val_loss - self.min_delta:
+            improved = checkpoint_metric < self.best_val_loss - self.min_delta
+            if improved:
                 self.best_val_loss = checkpoint_metric
                 self.best_epoch = epoch + 1
                 self.epochs_no_improve = 0
@@ -352,6 +380,19 @@ class CDTrainer:
                 torch.save(self.best_state_dict, self.best_model_path)
             else:
                 self.epochs_no_improve += 1
+
+            if verbose:
+                tag = "*" if improved else " "
+                print(
+                    f"{log_prefix}epoch {epoch + 1:3d}/{self.epochs} {tag} "
+                    f"loss={tr['loss']:.4f}  phys(tr/va)={tr['phys']:.4f}/{va['phys']:.4f}  "
+                    f"cd(tr/va)={tr['cd']:+.4f}/{va['cd']:+.4f}  "
+                    f"e+={tr['e_pos']:+.3f} e-={tr['e_neg']:+.3f} gap={tr['cd_gap']:+.3f}  "
+                    f"best={self.best_val_loss:.4f}@{self.best_epoch}  "
+                    f"pat={self.epochs_no_improve}/{self.patience}  "
+                    f"dt={time.time() - ep_t0:.1f}s  elapsed={time.time() - t0:.0f}s",
+                    flush=True,
+                )
 
             if epoch_callback is not None:
                 epoch_callback(epoch + 1, {
@@ -369,6 +410,12 @@ class CDTrainer:
                 })
 
             if self.early_stopping and self.epochs_no_improve >= self.patience:
+                if verbose:
+                    print(
+                        f"{log_prefix}early stop at epoch {epoch + 1} "
+                        f"(best val_phys={self.best_val_loss:.4f} @ {self.best_epoch})",
+                        flush=True,
+                    )
                 break
 
         torch.save(self.model.state_dict(), os.path.join(save_path, "last_model.pth"))
@@ -435,9 +482,15 @@ class PIDTrainer:
         val_loader: DataLoader,
         save_path: str,
         epoch_callback: Optional[Callable[[int, Dict[str, float]], None]] = None,
+        log_prefix: str = "",
+        verbose: bool = True,
     ) -> None:
         os.makedirs(save_path, exist_ok=True)
         self.best_model_path = os.path.join(save_path, "best_model.pth")
+
+        if verbose:
+            print(f"{log_prefix}PID grid search starting ...", flush=True)
+        t0 = time.time()
 
         gains, val_mse_phys = fit_pid_gains(
             self.model, train_loader, val_loader, self.pid_cfg, self.device
@@ -448,6 +501,16 @@ class PIDTrainer:
         # Single-point history just to keep the run script happy.
         self.history["train_loss"].append(val_mse_phys)
         self.history["val_loss"].append(val_mse_phys)
+
+        if verbose:
+            print(
+                f"{log_prefix}PID grid search done in {time.time() - t0:.1f}s | "
+                f"val_mse(phys)={val_mse_phys:.5f} | "
+                f"Kp_t={gains.kp_temp} Ki_t={gains.ki_temp} Kd_t={gains.kd_temp} "
+                f"Kp_o2={gains.kp_o2} | sp_t={gains.sp_temp:.2f} sp_o2={gains.sp_o2:.2f} "
+                f"afr_sp={gains.afr_sp:.2f}",
+                flush=True,
+            )
 
         if epoch_callback is not None:
             epoch_callback(1, {
