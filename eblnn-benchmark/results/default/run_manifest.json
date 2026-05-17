@@ -1,17 +1,79 @@
 {
   "run_name": "default",
   "models": [
-    "lstm"
+    "eblnn",
+    "lnn",
+    "lstm",
+    "pid"
   ],
   "seeds": [
-    42
+    42,
+    123,
+    456
   ],
   "device": "cpu",
   "runs": [
     {
+      "model": "eblnn",
+      "seed": 42,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/eblnn/seed_42/results.json"
+    },
+    {
+      "model": "eblnn",
+      "seed": 123,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/eblnn/seed_123/results.json"
+    },
+    {
+      "model": "eblnn",
+      "seed": 456,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/eblnn/seed_456/results.json"
+    },
+    {
+      "model": "lnn",
+      "seed": 42,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/lnn/seed_42/results.json"
+    },
+    {
+      "model": "lnn",
+      "seed": 123,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/lnn/seed_123/results.json"
+    },
+    {
+      "model": "lnn",
+      "seed": 456,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/lnn/seed_456/results.json"
+    },
+    {
       "model": "lstm",
       "seed": 42,
-      "results_path": "/Users/abuhuzaifahbidin/Documents/GitHub/energy-lnn/eblnn-benchmark/results/default/lstm/seed_42/results.json"
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/lstm/seed_42/results.json",
+      "skipped": true
+    },
+    {
+      "model": "lstm",
+      "seed": 123,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/lstm/seed_123/results.json"
+    },
+    {
+      "model": "lstm",
+      "seed": 456,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/lstm/seed_456/results.json"
+    },
+    {
+      "model": "pid",
+      "seed": 42,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/pid/seed_42/results.json",
+      "skipped": true
+    },
+    {
+      "model": "pid",
+      "seed": 123,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/pid/seed_123/results.json"
+    },
+    {
+      "model": "pid",
+      "seed": 456,
+      "results_path": "/home/ec2-user/energy-lnn/eblnn-benchmark/results/default/pid/seed_456/results.json"
     }
   ]
 }
