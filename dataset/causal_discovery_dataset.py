@@ -320,7 +320,7 @@ def plot_granger(F_mat: np.ndarray, cols: list, out_dir: Path):
                 annot=True, fmt=".1f",
                 xticklabels=short_labels, yticklabels=short_labels,
                 mask=mask, square=True,
-                cbar_kws={"label": "-log₁₀(p-value)"})
+                cbar_kws={"label": r"$-\log_{10}(p\mathrm{-value})$"})
     ax.set_title("Cross-Sectional Granger Causality\n(row → col, higher = stronger)")
     ax.set_xlabel("Target (effect)")
     ax.set_ylabel("Source (cause)")

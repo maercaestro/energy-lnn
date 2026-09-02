@@ -1,0 +1,84 @@
+{
+  "run_name": "landscape_default",
+  "checkpoint": "/Users/abuhuzaifahbidin/Documents/GitHub/energy-lnn/eblnn-benchmark/results/default/eblnn/seed_42/models/best_model.pth",
+  "device": "cpu",
+  "stats": {
+    "real": {
+      "mean": 1976.8682861328125,
+      "std": 1126.72900390625,
+      "median": 2260.24609375,
+      "min": -110.57908630371094,
+      "max": 3545.682373046875,
+      "n": 300
+    },
+    "S1_flame_out": {
+      "mean": 2731.895751953125,
+      "std": 19.246612548828125,
+      "median": 2730.494384765625,
+      "min": 2682.484375,
+      "max": 2802.331787109375,
+      "n": 300
+    },
+    "S2_air_leak": {
+      "mean": 3505.994140625,
+      "std": 34.862667083740234,
+      "median": 3506.85546875,
+      "min": 3394.777587890625,
+      "max": 3587.74267578125,
+      "n": 300
+    },
+    "S3_tube_rupture": {
+      "mean": 2568.768798828125,
+      "std": 23.32732391357422,
+      "median": 2567.535888671875,
+      "min": 2482.2216796875,
+      "max": 2630.90966796875,
+      "n": 300
+    },
+    "S4_positive_pressure": {
+      "mean": 2903.274658203125,
+      "std": 113.83706665039062,
+      "median": 2907.7177734375,
+      "min": 2536.87451171875,
+      "max": 3131.0986328125,
+      "n": 300
+    },
+    "S5_fuel_trip": {
+      "mean": 3150.466552734375,
+      "std": 17.071142196655273,
+      "median": 3150.690673828125,
+      "min": 3103.6884765625,
+      "max": 3199.395263671875,
+      "n": 300
+    },
+    "S6_fuel_contamination": {
+      "mean": 3495.0146484375,
+      "std": 41.59489059448242,
+      "median": 3496.2568359375,
+      "min": 3359.947509765625,
+      "max": 3605.772216796875,
+      "n": 300
+    }
+  },
+  "margins": {
+    "S2_air_leak": 1529.1258544921875,
+    "S6_fuel_contamination": 1518.1463623046875,
+    "S5_fuel_trip": 1173.5982666015625,
+    "S4_positive_pressure": 926.4063720703125,
+    "S1_flame_out": 755.0274658203125,
+    "S3_tube_rupture": 591.9005126953125
+  },
+  "sensitivity_ranking": {
+    "AFR": 74.05329895019531,
+    "cur_temp": 45.459407806396484,
+    "fuel_flow": 16.94232940673828,
+    "inflow_T": 14.514726638793945,
+    "inflow_rate": 0.9069053530693054
+  },
+  "h1_evidence": {
+    "all_margins_positive": true,
+    "max_margin_scenario": "S2_air_leak",
+    "max_margin_value": 1529.1258544921875,
+    "real_mean_energy": 1976.8682861328125
+  }
+}

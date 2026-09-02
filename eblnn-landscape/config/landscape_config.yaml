@@ -1,0 +1,48 @@
+run_name: landscape_default
+
+wandb:
+  enabled: true
+  project: eblnn-landscape
+  entity: null                   # null -> default wandb entity
+  mode: online                   # online | offline | disabled
+  tags: [landscape, h1, eblnn, energy]
+
+# ── Model ─────────────────────────────────────────────────────────────────
+model:
+  # Path relative to repo root, or absolute. Override via --checkpoint on CLI.
+  checkpoint_path: eblnn-benchmark/results/default/eblnn/seed_42/models/best_model.pth
+  hidden_size: 128
+  ebm_hidden_dims: [128, 64]
+  input_size: 5
+  phys_output_size: 2
+  mixed_memory: true
+
+# ── Data ──────────────────────────────────────────────────────────────────
+data:
+  real_csv: dataset/real_furnace_eblnn.csv
+  edge_csv: dataset/edge_cases_v2_eblnn.csv
+  seq_len: 30
+  stride: 30
+  # Max sequences per scenario to compute energy for (set null for all).
+  # Use ~2000 for quick local runs; null for VM.
+  max_sequences_per_group: 2000
+  scaler_train_fraction: 0.8    # fraction of real data used to fit scaler
+  seed: 42
+
+# ── Analysis ──────────────────────────────────────────────────────────────
+analysis:
+  device: auto                  # auto | cpu | cuda
+  batch_size: 512               # sequences per forward pass
+  grid_res: 60                  # resolution of 2D contour grids
+  n_sigma: 2.5                  # sweep range for 1D/2D profiles
+
+# ── Plots ─────────────────────────────────────────────────────────────────
+plots:
+  out_dir: eblnn-landscape/results
+  dpi: 150
+  format: png                   # png | pdf
+  show: false                   # set true to open plots interactively
+
+# ── Output ────────────────────────────────────────────────────────────────
+output:
+  save_energies_npz: true       # save raw energy arrays for later analysis
