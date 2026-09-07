@@ -37,6 +37,12 @@ def parse_args() -> argparse.Namespace:
         "--config",
         default=str(Path(__file__).with_name("base_config.yaml")),
     )
+    parser.add_argument("--alpha", type=float)
+    parser.add_argument("--l2_reg", type=float)
+    parser.add_argument("--n_steps", type=int)
+    parser.add_argument("--step_size", type=float)
+    parser.add_argument("--noise_scale", type=float)
+    parser.add_argument("--buffer_prob", type=float)
     parser.add_argument("--no-wandb", action="store_true")
     return parser.parse_args()
 
@@ -64,6 +70,12 @@ def choose_device(requested: str) -> str:
 def main() -> None:
     args = parse_args()
     config = load_config(args.config)
+    overrides = {
+        name: value
+        for name, value in vars(args).items()
+        if name not in {"config", "no_wandb"} and value is not None
+    }
+    config.update(overrides)
     use_wandb = WANDB_AVAILABLE and not args.no_wandb
 
     if use_wandb:
