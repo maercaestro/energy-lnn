@@ -27,8 +27,8 @@ From the repository root on the VM:
 python -m venv .venv
 source .venv/bin/activate
 pip install -r eblnn/requirements.txt
-# Set this in the VM shell; do not put the key in a tracked file.
-export WANDB_API_KEY='your-wandb-api-key'
+# .env is already ignored by the repository.
+printf 'WANDB_API_KEY=%s\n' 'your-wandb-api-key' > .env
 tmux new -s eblnn-tuning
 COUNT=30 bash eblnn/ebm_tuning/run_vm.sh
 ```
@@ -39,8 +39,9 @@ records each trial's per-epoch metrics and uploads a versioned
 These can be downloaded later from the W&B run's Artifacts tab even if the VM
 is deleted. Local copies are written to `eblnn/results/ebm_tuning/<wandb-run-id>/`.
 Set `COUNT=20` for an initial campaign or `COUNT=30` for the final selection.
-The launcher and trial runner both require `WANDB_API_KEY` from the operating-
-system environment and never write it to configs, logs, or artifacts.
+The launcher automatically loads `WANDB_API_KEY` from the repository-root
+`.env` file and passes it to each W&B child process. It never writes the key to
+configs, logs, or artifacts.
 
 After selecting the configuration by `best_val_physics`, copy those EBM/CD
 and Langevin values into the benchmark configuration, freeze them, and run the
