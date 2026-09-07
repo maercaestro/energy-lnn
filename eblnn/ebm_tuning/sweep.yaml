@@ -1,0 +1,19 @@
+# Bayesian search over parameters introduced by the EBM/CD augmentation only.
+program: ebm_tuning/run_trial.py
+method: bayes
+metric:
+  name: best_val_physics
+  goal: minimize
+parameters:
+  alpha:
+    values: [0.1, 0.5, 1.0, 2.0, 5.0]
+  l2_reg:
+    values: [0.005, 0.01, 0.05, 0.1]
+  n_steps:
+    values: [10, 20, 50]
+  step_size:
+    values: [0.005, 0.01, 0.02]
+  noise_scale:
+    values: [0.001, 0.005, 0.01]
+  buffer_prob:
+    values: [0.5, 0.75, 0.95]

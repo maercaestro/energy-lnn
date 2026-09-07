@@ -1,0 +1,39 @@
+# Frozen pilot-study backbone and data protocol; tune only EBM/CD additions.
+real_csv: "real_furnace_eblnn.csv"
+edge_csv: "edge_cases_v2_eblnn.csv"
+scenarios: null
+confidence_filter: null
+edge_fraction: 1.0
+seq_len: 30
+stride: 30
+batch_size: 64
+test_size: 0.2
+val_size: 0.1
+seed: 42
+
+# Fixed CfC/LNN settings from the pilot study / prior ablations.
+hidden_size: 128
+ebm_hidden_dims: [128, 64]
+epochs: 200
+learning_rate: 0.001
+patience: 20
+min_delta: 0.0001
+early_stopping: true
+margin: 0.0
+energy_clamp: 20.0
+clip_x: 3.0
+buffer_capacity: 10000
+
+# Baseline values; W&B overrides the EBM/CD and Langevin controls.
+alpha: 1.0
+l2_reg: 0.1
+n_steps: 20
+step_size: 0.01
+noise_scale: 0.005
+buffer_prob: 0.95
+
+device: auto
+wandb:
+  project: eblnn-ebm-tuning
+  entity: null
+  tags: [eblnn, ebm, contrastive-divergence, langevin, tuning]
