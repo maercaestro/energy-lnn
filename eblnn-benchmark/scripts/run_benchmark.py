@@ -23,6 +23,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import yaml
+from torch.utils.data import DataLoader, Subset
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -61,6 +62,9 @@ def parse_args() -> argparse.Namespace:
                         help="Disable wandb logging even if enabled in config.")
     parser.add_argument("--force", action="store_true",
                         help="Rerun (model, seed) combinations whose results.json already exists.")
+    parser.add_argument("--smoke-test", action="store_true",
+                        help="Two epochs, one seed, two small batches per split; "
+                             "evaluate on validation data only in a separate smoke directory.")
     return parser.parse_args()
 
 
@@ -96,8 +100,16 @@ def main() -> None:
     seeds = args.seeds or config["experiment"]["seeds"]
     device = choose_device(config["experiment"].get("device", "auto"))
 
+    if args.smoke_test:
+        run_name += "-smoke"
+        seeds = seeds[:1]
+        config["training"]["epochs"] = min(2, config["training"]["epochs"])
+        config["data"]["batch_size"] = min(8, config["data"]["batch_size"])
+        print("[smoke] Bounded training; evaluation uses validation data, not test data.")
+
     output_dir = (
-        Path(args.output_dir) if args.output_dir
+        Path(args.output_dir) / "smoke" if args.output_dir and args.smoke_test
+        else Path(args.output_dir) if args.output_dir
         else (ROOT / "results" / run_name)
     )
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -111,9 +123,11 @@ def main() -> None:
     use_wandb = (
         bool(wandb_cfg.get("enabled", False))
         and not args.no_wandb
+        and not args.smoke_test
         and _WANDB_AVAILABLE
     )
-    if wandb_cfg.get("enabled") and not _WANDB_AVAILABLE and not args.no_wandb:
+    if (wandb_cfg.get("enabled") and not _WANDB_AVAILABLE
+            and not args.no_wandb and not args.smoke_test):
         print("[warn] wandb enabled in config but the package is not installed; "
               "continuing without wandb.")
 
@@ -182,6 +196,21 @@ def main() -> None:
                 seed=seed,
             ).build()
 
+            if args.smoke_test:
+                for split in ("train", "val"):
+                    loader = getattr(pipeline, f"{split}_loader")
+                    subset = Subset(
+                        loader.dataset,
+                        range(min(len(loader.dataset), 2 * data_cfg["batch_size"])),
+                    )
+                    setattr(pipeline, f"{split}_loader", DataLoader(
+                        subset, batch_size=data_cfg["batch_size"],
+                        shuffle=(split == "train"),
+                    ))
+            evaluation_loader = (
+                pipeline.val_loader if args.smoke_test else pipeline.test_loader
+            )
+
             model = create_model(
                 model_name=model_name,
                 input_size=pipeline.input_size,
@@ -229,22 +258,22 @@ def main() -> None:
             )
             trainer.load_best_model()
 
-            y_true, y_pred = trainer.predict(pipeline.test_loader)
+            y_true, y_pred = trainer.predict(evaluation_loader)
             y_true = pipeline.target_scaler.inverse_transform(y_true)
             y_pred = pipeline.target_scaler.inverse_transform(y_pred)
             test_metrics = compute_regression_metrics(y_true, y_pred)
 
             # ---- Inference latency ----
             model.eval()
-            n_batches = len(pipeline.test_loader)
+            n_batches = len(evaluation_loader)
             with torch.no_grad():
-                for x_batch, _ in pipeline.test_loader:
+                for x_batch, _ in evaluation_loader:
                     model(x_batch.to(device))
                     break
             t0 = time.time()
             n_samples_inf = 0
             with torch.no_grad():
-                for x_batch, _ in pipeline.test_loader:
+                for x_batch, _ in evaluation_loader:
                     model(x_batch.to(device))
                     n_samples_inf += x_batch.shape[0]
             inference_wall = time.time() - t0
@@ -258,18 +287,18 @@ def main() -> None:
             )
 
             disturbance = run_disturbance_evaluation(
-                model=trainer.model, loader=pipeline.test_loader,
+                model=trainer.model, loader=evaluation_loader,
                 device=device, target_scaler=pipeline.target_scaler,
             )
             safety = run_safety_evaluation(
-                model=trainer.model, loader=pipeline.test_loader,
+                model=trainer.model, loader=evaluation_loader,
                 device=device, target_scaler=pipeline.target_scaler,
             )
             disturbance_summary = summarize_disturbance_results(disturbance)
             safety_summary = summarize_safety_results(safety)
 
             extreme = run_extreme_evaluation(
-                model=trainer.model, loader=pipeline.test_loader,
+                model=trainer.model, loader=evaluation_loader,
                 device=device, target_scaler=pipeline.target_scaler,
             )
             extreme_summary = summarize_extreme_results(extreme)
@@ -286,6 +315,8 @@ def main() -> None:
 
             result = {
                 "model": model_name,
+                "smoke_test": args.smoke_test,
+                "evaluation_split": "validation" if args.smoke_test else "test",
                 "seed": seed,
                 "device": device,
                 "param_count": param_count,
@@ -332,8 +363,7 @@ def main() -> None:
                 json.dump(result, handle, indent=2)
             np.savez(
                 seed_dir / "history.npz",
-                train_loss=np.array(trainer.history["train_loss"]),
-                val_loss=np.array(trainer.history["val_loss"]),
+                **{key: np.asarray(values) for key, values in trainer.history.items()},
             )
 
             # ---- log final summary metrics + finish wandb ----
@@ -387,6 +417,8 @@ def main() -> None:
         json.dump(
             {
                 "run_name": run_name, "models": models, "seeds": seeds,
+                "smoke_test": args.smoke_test,
+                "evaluation_split": "validation" if args.smoke_test else "test",
                 "device": device, "runs": all_saved_runs,
             },
             handle, indent=2,

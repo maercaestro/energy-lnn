@@ -37,6 +37,10 @@ pip install -r eblnn-benchmark/requirements.txt
 # Full benchmark (all four models, three seeds)
 python eblnn-benchmark/scripts/run_benchmark.py
 
+# Isolated wiring check: all four models, first seed, at most two epochs.
+# Evaluation uses validation data, never the held-out test loader.
+python eblnn-benchmark/scripts/run_benchmark.py --smoke-test
+
 # Single seed of EB-LNN vs LSTM vs PID for a quick check
 python eblnn-benchmark/scripts/run_benchmark.py \
     --models eblnn lstm pid --seeds 42
@@ -46,6 +50,32 @@ python eblnn-benchmark/scripts/compare_results.py
 
 # Publication figures
 python eblnn-benchmark/scripts/plot_results.py
+```
+
+## Frozen EBM configuration
+
+The default run is `ebm-tuned-f6ozllp7`, selected from the 30-trial
+validation-only campaign by `best_val_physics` (0.01892160, seed 42).
+The frozen settings are `alpha=1.0`, `l2_reg=0.1`, `n_steps=20`,
+`step_size=0.01`, `noise_scale=0.005`, and `buffer_prob=0.75`.
+Compared with the old benchmark config, both `l2_reg` and `buffer_prob`
+change; the tuning baseline already used `l2_reg=0.1`.
+Do not retune using benchmark test metrics.
+
+The new run name prevents resume logic from reusing the old `results/default`
+outputs. Aggregation and plotting default to the configured run name.
+`--smoke-test` disables W&B, uses batches of at most eight sequences and at
+most two batches for training/validation, and saves under
+`results/ebm-tuned-f6ozllp7-smoke`. With `--output_dir`, smoke outputs go in
+its `smoke/` subdirectory. Smoke results explicitly record
+`smoke_test: true` and `evaluation_split: validation`; their legacy
+`test_metrics` field contains validation-only diagnostics, not test scores.
+The full data pipeline is still built to check loading, splitting and scaling.
+
+Run the protocol regression checks with:
+
+```bash
+python -m unittest discover -s eblnn-benchmark/tests -v
 ```
 
 ## Outputs
@@ -100,7 +130,7 @@ Environment variables understood by `run_vm.sh`:
 | Var | Default | Purpose |
 | :-- | :-- | :-- |
 | `EBLNN_PYTHON` | `python` | Python interpreter to use. |
-| `RUN_NAME` | `default` | Run name → results live under `results/$RUN_NAME/`. |
+| `RUN_NAME` | config's `run_name` | Run name → results live under `results/$RUN_NAME/`. |
 | `CONFIG_PATH` | `eblnn-benchmark/config/benchmark_config.yaml` | Override config. |
 | `WANDB_API_KEY` | (unset) | wandb auth. |
 | `NO_WANDB` | `0` | Set to `1` to disable wandb logging. |

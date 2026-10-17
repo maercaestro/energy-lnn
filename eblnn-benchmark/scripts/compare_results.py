@@ -6,6 +6,8 @@ from pathlib import Path
 from statistics import mean, stdev
 from typing import Dict, List
 
+import yaml
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Aggregate lnn-test benchmark outputs")
@@ -13,7 +15,7 @@ def parse_args() -> argparse.Namespace:
         "--results_dir",
         type=str,
         default=None,
-        help="Benchmark run directory. Defaults to eblnn-benchmark/results/default.",
+        help="Benchmark run directory. Defaults to the configured run_name.",
     )
     return parser.parse_args()
 
@@ -569,7 +571,9 @@ def build_markdown(summary: Dict[str, dict], scores: Dict[str, dict] | None = No
 def main() -> None:
     args = parse_args()
     root = Path(__file__).resolve().parents[1]
-    results_dir = Path(args.results_dir) if args.results_dir else (root / "results" / "default")
+    with open(root / "config" / "benchmark_config.yaml") as handle:
+        config = yaml.safe_load(handle)
+    results_dir = Path(args.results_dir) if args.results_dir else (root / "results" / config["run_name"])
     if not results_dir.exists():
         raise FileNotFoundError(f"Results directory does not exist: {results_dir}")
 

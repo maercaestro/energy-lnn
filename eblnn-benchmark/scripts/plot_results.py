@@ -26,6 +26,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+import yaml
 
 
 COLORS = {
@@ -348,7 +349,9 @@ def main() -> None:
     _setup_figure()
 
     root = Path(__file__).resolve().parents[1]
-    results_dir = Path(args.results_dir) if args.results_dir else (root / "results" / "default")
+    with open(root / "config" / "benchmark_config.yaml") as handle:
+        config = yaml.safe_load(handle)
+    results_dir = Path(args.results_dir) if args.results_dir else (root / "results" / config["run_name"])
     if not results_dir.exists():
         raise FileNotFoundError(f"Results directory does not exist: {results_dir}")
 

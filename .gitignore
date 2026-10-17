@@ -85,6 +85,9 @@ dataset/final_data.csv
 dataset/checkpoints_v2/
 *.pth
 *.pkl
+eblnn/ebm_tuning/results/
+eblnn/results/
+eblnn-benchmark/results/
 
 # ── Ablation results (regenerated on each run) ──────────────────
 eblnn/results/ablation/

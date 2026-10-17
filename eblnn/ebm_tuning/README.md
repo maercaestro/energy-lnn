@@ -46,3 +46,14 @@ configs, logs, or artifacts.
 After selecting the configuration by `best_val_physics`, copy those EBM/CD
 and Langevin values into the benchmark configuration, freeze them, and run the
 multi-seed benchmark. Do not use benchmark test results to choose these values.
+
+## Selected configuration
+
+The 30-trial campaign selected run `f6ozllp7` by validation physics MSE:
+**0.01892160**, at epoch 137 (seed 42). Its settings are frozen in
+[`benchmark_config.yaml`](../../eblnn-benchmark/config/benchmark_config.yaml):
+`alpha=1.0`, `l2_reg=0.1`, `n_steps=20`, `step_size=0.01`,
+`noise_scale=0.005`, and `buffer_prob=0.75`.
+Only `buffer_prob` differs from this campaign's baseline; the older benchmark
+configuration also needs its `l2_reg` raised from `0.01` to `0.1`.
+The benchmark run name is `ebm-tuned-f6ozllp7`, separate from old results.

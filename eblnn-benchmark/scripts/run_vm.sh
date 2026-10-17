@@ -34,8 +34,8 @@ cd "${REPO_ROOT}"
 
 # ---- env ----
 PYTHON_BIN="${EBLNN_PYTHON:-python}"
-RUN_NAME="${RUN_NAME:-default}"
 CONFIG_PATH="${CONFIG_PATH:-${BENCH_DIR}/config/benchmark_config.yaml}"
+RUN_NAME="${RUN_NAME:-$("${PYTHON_BIN}" -c 'import sys, yaml; print(yaml.safe_load(open(sys.argv[1]))["run_name"])' "${CONFIG_PATH}")}"
 EXTRA_ARGS=()
 if [[ "${FORCE:-0}" == "1" ]]; then
     EXTRA_ARGS+=("--force")
@@ -81,6 +81,7 @@ fi
 echo ">>> Running benchmark sweep ..."
 "${PYTHON_BIN}" "${BENCH_DIR}/scripts/run_benchmark.py" \
     --config "${CONFIG_PATH}" \
+    --output_dir "${BENCH_DIR}/results/${RUN_NAME}" \
     "${EXTRA_ARGS[@]}"
 
 # ---- 2. Aggregate ----
