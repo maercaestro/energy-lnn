@@ -250,11 +250,25 @@ def _best_model_for(summary: Dict[str, dict], key: str) -> str:
     return best or ""
 
 
-def build_markdown(summary: Dict[str, dict], scores: Dict[str, dict] | None = None) -> str:
+def build_markdown(
+    summary: Dict[str, dict], scores: Dict[str, dict] | None = None,
+    protocol: str = "legacy-snapshot", smoke_test: bool = False,
+) -> str:
     lines: list[str] = []
 
     # ── Title ──
-    lines.extend([
+    if protocol == "forecast-real-v1":
+        lines.extend([
+            "# Real-Data Forecasting Benchmark",
+            "",
+            "Chronological train/validation/test splits; future targets within contiguous blocks.",
+            "Inputs are measured sensors, with no synthetic augmentation or PINN-derived features.",
+            "Persistence predicts each future output as its current measured value.",
+            "Safety tables count prediction threshold crossings, not closed-loop plant safety.",
+            "",
+        ])
+    else:
+        lines.extend([
         "# EB-LNN vs LNN vs LSTM vs PID — Benchmark Report",
         "",
         "Evaluated on the PINN-augmented industrial furnace dataset.",
@@ -264,6 +278,8 @@ def build_markdown(summary: Dict[str, dict], scores: Dict[str, dict] | None = No
         "Each neural model is trained with multiple random seeds; values are reported as mean $\\pm$ std.",
         "",
     ])
+    if smoke_test:
+        lines.extend(["> SMOKE TEST ONLY: validation diagnostics, not held-out test results.", ""])
 
     # ── Table 1: Prediction accuracy ──
     lines.extend([
@@ -571,7 +587,7 @@ def build_markdown(summary: Dict[str, dict], scores: Dict[str, dict] | None = No
 def main() -> None:
     args = parse_args()
     root = Path(__file__).resolve().parents[1]
-    with open(root / "config" / "benchmark_config.yaml") as handle:
+    with open(root / "config" / "forecast_config.yaml") as handle:
         config = yaml.safe_load(handle)
     results_dir = Path(args.results_dir) if args.results_dir else (root / "results" / config["run_name"])
     if not results_dir.exists():
@@ -580,10 +596,18 @@ def main() -> None:
     runs = load_model_runs(results_dir)
     if not runs:
         raise ValueError(f"No saved runs found under {results_dir}")
+    all_runs = [run for model_runs in runs.values() for run in model_runs]
+    protocols = {run.get("protocol", "legacy-snapshot") for run in all_runs}
+    smoke_modes = {run.get("smoke_test", False) for run in all_runs}
+    metadata = {json.dumps(run.get("protocol_metadata", {}), sort_keys=True) for run in all_runs}
+    if len(protocols) != 1 or len(smoke_modes) != 1 or len(metadata) != 1:
+        raise ValueError("Cannot aggregate mixed data protocols, source data, horizons, or smoke/final runs.")
+    protocol = next(iter(protocols))
+    smoke_test = next(iter(smoke_modes))
 
     summary = build_summary(runs)
     scores = compute_composite_scores(summary)
-    report = build_markdown(summary, scores)
+    report = build_markdown(summary, scores, protocol=protocol, smoke_test=smoke_test)
 
     with open(results_dir / "comparison_summary.json", "w") as handle:
         json.dump({"summary": summary, "composite_scores": scores}, handle, indent=2)

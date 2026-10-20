@@ -1,5 +1,13 @@
 # Physics-Informed Data Augmentation for Furnace Anomaly Detection
 
+> Forecasting audit (2026-10-19): the EBLNN-ready exports below are snapshots,
+> not future-state labels. `current_temp` and `next_temp` use the same
+> `OutletT`; `next_excess_o2` is also same-row. Edge samples are independent
+> LHS operating points, not simulated trajectories. Preserve these outputs
+> for provenance, but do not use them to claim next-step forecasting.
+> The corrected real-data protocol reads `cleaned_furnace_data.csv` directly:
+> [forecasting benchmark](../eblnn-benchmark/README.md).
+
 ## Project Summary — Phase 1: PINN Training & Edge-Case Generation
 
 ---

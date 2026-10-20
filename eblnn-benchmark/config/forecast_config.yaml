@@ -1,0 +1,62 @@
+run_name: forecast-real-v1
+
+wandb:
+  enabled: true
+  project: eblnn-benchmark
+  entity: null
+  mode: online
+  group: null
+  tags: [eblnn, forecasting, real-only, chronological, v1]
+
+experiment:
+  seeds: [42, 123, 456]
+  models: [eblnn, lnn, lstm, persistence]
+  device: auto
+
+data:
+  protocol: forecast-real-v1
+  real_csv: ../dataset/cleaned_furnace_data.csv
+  edge_csv: null
+  horizon: 1
+  seq_len: 30
+  stride: 30
+  batch_size: 64
+  # Fractions of all source rows, unlike the legacy combined holdout setting.
+  test_size: 0.1
+  val_size: 0.1
+
+training:
+  epochs: 200
+  learning_rate: 0.001
+  patience: 20
+  min_delta: 0.0001
+  early_stopping: true
+  heartbeat: 25
+
+# Starting values only: the legacy tuning campaign did not tune forecasting.
+eblnn:
+  alpha: 1.0
+  l2_reg: 0.1
+  margin: 0.0
+  energy_clamp: 20.0
+  buffer_capacity: 10000
+  buffer_prob: 0.75
+  langevin:
+    n_steps: 20
+    step_size: 0.01
+    noise_scale: 0.005
+    clip_x: 3.0
+
+models:
+  eblnn:
+    hidden_size: 128
+    ebm_hidden_dims: [128, 64]
+    mixed_memory: true
+  lnn:
+    hidden_size: 128
+    mixed_memory: true
+  lstm:
+    hidden_size: 128
+    num_layers: 2
+    dropout: 0.1
+  persistence: {}

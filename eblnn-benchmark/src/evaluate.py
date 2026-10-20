@@ -190,6 +190,7 @@ def run_extreme_evaluation(
     loader: DataLoader,
     device: str,
     target_scaler=None,
+    feature_names: list[str] | None = None,
 ) -> Dict[str, dict]:
     """Extreme refinery-realistic stress tests."""
     y_true, y_pred = _predict(model, loader, device, target_scaler)
@@ -211,25 +212,28 @@ def run_extreme_evaluation(
         }
 
     # --- Multi-sensor failures ---
-    run_case("multi_drop_fuel+air", make_multi_sensor_dropout([0, 1]))
+    names = FEATURE_NAMES if feature_names is None else feature_names
+    fuel_air_name = ("multi_drop_fuel+air" if feature_names is None
+                     else f"multi_drop_{names[0]}+{names[1]}")
+    run_case(fuel_air_name, make_multi_sensor_dropout([0, 1]))
     run_case("multi_drop_fuel+temp", make_multi_sensor_dropout([0, 2]))
     run_case("multi_drop_3sensors", make_multi_sensor_dropout([0, 2, 3]))
 
     # --- Sensor drift (calibration loss) ---
-    for idx, name in enumerate(FEATURE_NAMES):
+    for idx, name in enumerate(names):
         run_case(f"drift_{name}_slow", make_sensor_drift(idx, 0.05))
         run_case(f"drift_{name}_fast", make_sensor_drift(idx, 0.2))
 
     # --- Stuck sensors ---
-    for idx, name in enumerate(FEATURE_NAMES):
+    for idx, name in enumerate(names):
         run_case(f"stuck_{name}", make_stuck_sensor(idx))
 
     # --- Rapid oscillations ---
-    for idx, name in enumerate(FEATURE_NAMES):
+    for idx, name in enumerate(names):
         run_case(f"oscillation_{name}", make_oscillation(idx, amplitude=2.0, period=5))
 
     # --- Intermittent dropout ---
-    for idx, name in enumerate(FEATURE_NAMES):
+    for idx, name in enumerate(names):
         run_case(f"intermittent_{name}_30pct", make_intermittent_dropout(idx, 0.3))
         run_case(f"intermittent_{name}_50pct", make_intermittent_dropout(idx, 0.5))
 
@@ -324,6 +328,7 @@ def run_disturbance_evaluation(
     loader: DataLoader,
     device: str,
     target_scaler=None,
+    feature_names: list[str] | None = None,
 ) -> Dict[str, dict]:
     y_true, y_pred = _predict(model, loader, device, target_scaler)
     clean_metrics = compute_regression_metrics(y_true, y_pred)
@@ -344,7 +349,8 @@ def run_disturbance_evaluation(
     for sigma in [0.1, 0.25, 0.5, 1.0, 2.0]:
         run_case(f"noise_sigma_{sigma}", make_gaussian_noise(sigma))
 
-    for index, feature_name in enumerate(FEATURE_NAMES):
+    names = FEATURE_NAMES if feature_names is None else feature_names
+    for index, feature_name in enumerate(names):
         run_case(f"dropout_{feature_name}", make_sensor_dropout(index))
 
     for fraction in [0.05, 0.10, 0.20]:
@@ -355,7 +361,7 @@ def run_disturbance_evaluation(
     for shift in [1.0, 2.0, 3.0]:
         run_case(f"extrap_shift_{shift}sigma", make_extrapolation_shift(shift))
 
-    for index, feature_name in enumerate(FEATURE_NAMES):
+    for index, feature_name in enumerate(names):
         run_case(f"scale_2x_{feature_name}", make_feature_scale(index, 2.0))
         run_case(f"scale_0.5x_{feature_name}", make_feature_scale(index, 0.5))
 
@@ -367,6 +373,7 @@ def run_safety_evaluation(
     loader: DataLoader,
     device: str,
     target_scaler=None,
+    feature_names: list[str] | None = None,
 ) -> Dict[str, dict]:
     _, clean_pred = _predict(model, loader, device, target_scaler)
     clean_safety = compute_safety_violations(clean_pred)
@@ -404,7 +411,8 @@ def run_safety_evaluation(
     for sigma in [0.1, 0.25, 0.5, 1.0, 2.0]:
         run_case(f"noise_sigma_{sigma}", make_gaussian_noise(sigma))
 
-    for index, feature_name in enumerate(FEATURE_NAMES):
+    names = FEATURE_NAMES if feature_names is None else feature_names
+    for index, feature_name in enumerate(names):
         run_case(f"dropout_{feature_name}", make_sensor_dropout(index))
 
     for fraction in [0.05, 0.10, 0.20]:
@@ -415,7 +423,7 @@ def run_safety_evaluation(
     for shift in [1.0, 2.0, 3.0]:
         run_case(f"extrap_shift_{shift}sigma", make_extrapolation_shift(shift))
 
-    for index, feature_name in enumerate(FEATURE_NAMES):
+    for index, feature_name in enumerate(names):
         run_case(f"scale_2x_{feature_name}", make_feature_scale(index, 2.0))
         run_case(f"scale_0.5x_{feature_name}", make_feature_scale(index, 0.5))
 

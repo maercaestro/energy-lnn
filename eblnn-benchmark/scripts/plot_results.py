@@ -12,7 +12,7 @@ Generates seven figures:
 
 Usage:
     python eblnn-benchmark/scripts/plot_results.py
-    python eblnn-benchmark/scripts/plot_results.py --results_dir eblnn-benchmark/results/default
+    python eblnn-benchmark/scripts/plot_results.py --results_dir eblnn-benchmark/results/forecast-real-v1
 """
 from __future__ import annotations
 
@@ -34,6 +34,7 @@ COLORS = {
     "lnn":   "#2176AE",
     "lstm":  "#F26419",
     "pid":   "#5F6062",
+    "persistence": "#5F6062",
     "mlp":   "#86BA90",
 }
 MODEL_LABELS = {
@@ -41,6 +42,7 @@ MODEL_LABELS = {
     "lnn":   "LNN (CfC)",
     "lstm":  "LSTM",
     "pid":   "PID baseline",
+    "persistence": "Persistence",
     "mlp":   "MLP",
 }
 NOISE_LEVELS = ["0.1", "0.25", "0.5", "1.0", "2.0"]
@@ -349,7 +351,7 @@ def main() -> None:
     _setup_figure()
 
     root = Path(__file__).resolve().parents[1]
-    with open(root / "config" / "benchmark_config.yaml") as handle:
+    with open(root / "config" / "forecast_config.yaml") as handle:
         config = yaml.safe_load(handle)
     results_dir = Path(args.results_dir) if args.results_dir else (root / "results" / config["run_name"])
     if not results_dir.exists():

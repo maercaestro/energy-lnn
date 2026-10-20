@@ -157,6 +157,22 @@ class EBLNNWrapper(nn.Module):
 # Factory
 # ---------------------------------------------------------------------------
 
+class PersistencePredictor(nn.Module):
+    """Predict each future output as its last observed value at that timestep."""
+
+    def __init__(self, input_scaler, target_scaler, feature_names: list[str]) -> None:
+        super().__init__()
+        indices = [feature_names.index(name) for name in ("current_temp", "current_o2")]
+        self.register_buffer("indices", torch.tensor(indices, dtype=torch.long))
+        self.register_buffer("input_mean", torch.tensor(input_scaler.mean_[indices], dtype=torch.float32))
+        self.register_buffer("input_scale", torch.tensor(input_scaler.scale_[indices], dtype=torch.float32))
+        self.register_buffer("target_mean", torch.tensor(target_scaler.mean_, dtype=torch.float32))
+        self.register_buffer("target_scale", torch.tensor(target_scaler.scale_, dtype=torch.float32))
+
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, None]:
+        observed = x.index_select(-1, self.indices) * self.input_scale + self.input_mean
+        return (observed - self.target_mean) / self.target_scale, None
+
 
 def create_model(
     model_name: str,
@@ -195,6 +211,13 @@ def create_model(
             phys_output_size=target_size,
             ebm_hidden_dims=model_config.get("ebm_hidden_dims", [128, 64]),
             mixed_memory=model_config.get("mixed_memory", True),
+        )
+    elif name == "persistence":
+        for key in ("input_scaler", "target_scaler", "feature_names"):
+            if kwargs.get(key) is None:
+                raise ValueError(f"Persistence requires {key}.")
+        model = PersistencePredictor(
+            kwargs["input_scaler"], kwargs["target_scaler"], kwargs["feature_names"],
         )
     elif name == "pid":
         input_scaler = kwargs.get("input_scaler")

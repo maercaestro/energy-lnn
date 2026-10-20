@@ -581,6 +581,35 @@ class PIDTrainer:
 # Factory
 # ---------------------------------------------------------------------------
 
+class PersistenceTrainer(SupervisedTrainer):
+    def __init__(self, model: nn.Module, device: str) -> None:
+        self.model = model
+        self.device = device
+        self.criterion = nn.MSELoss()
+        self.history = {"train_loss": [], "val_loss": []}
+        self.best_epoch = 1
+        self.best_val_loss = float("inf")
+        self.best_state_dict = None
+        self.best_model_path = None
+
+    def train(
+        self, train_loader: DataLoader, val_loader: DataLoader, save_path: str,
+        epoch_callback=None, log_prefix: str = "", verbose: bool = True,
+    ) -> None:
+        os.makedirs(save_path, exist_ok=True)
+        self.best_model_path = os.path.join(save_path, "best_model.pth")
+        self.best_val_loss = self._validate(val_loader)
+        self.history["train_loss"].append(self._validate(train_loader))
+        self.history["val_loss"].append(self.best_val_loss)
+        torch.save(self.model.state_dict(), self.best_model_path)
+        if verbose:
+            print(f"{log_prefix}Persistence: no fitting; val_mse={self.best_val_loss:.6f}", flush=True)
+        if epoch_callback is not None:
+            epoch_callback(1, {
+                "train_loss": self.history["train_loss"][0],
+                "val_loss": self.best_val_loss, "best_val_loss": self.best_val_loss,
+            })
+
 
 def create_trainer(
     model_name: str,
@@ -595,6 +624,8 @@ def create_trainer(
     name = model_name.lower()
     if name in {"lnn", "lstm"}:
         return SupervisedTrainer(model=model, config=train_cfg, device=device)
+    if name == "persistence":
+        return PersistenceTrainer(model=model, device=device)
     if name == "eblnn":
         if eblnn_cfg is None or seq_len is None or input_size is None:
             raise ValueError("CDTrainer needs eblnn_cfg, seq_len, input_size.")

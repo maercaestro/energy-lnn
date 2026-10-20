@@ -1,3 +1,5 @@
+# Historical snapshot protocol, NOT a valid next-step forecast.
+# Use forecast_config.yaml for the corrected real-data experiment.
 run_name: ebm-tuned-f6ozllp7
 
 wandb:

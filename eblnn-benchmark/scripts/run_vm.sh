@@ -34,7 +34,7 @@ cd "${REPO_ROOT}"
 
 # ---- env ----
 PYTHON_BIN="${EBLNN_PYTHON:-python}"
-CONFIG_PATH="${CONFIG_PATH:-${BENCH_DIR}/config/benchmark_config.yaml}"
+CONFIG_PATH="${CONFIG_PATH:-${BENCH_DIR}/config/forecast_config.yaml}"
 RUN_NAME="${RUN_NAME:-$("${PYTHON_BIN}" -c 'import sys, yaml; print(yaml.safe_load(open(sys.argv[1]))["run_name"])' "${CONFIG_PATH}")}"
 EXTRA_ARGS=()
 if [[ "${FORCE:-0}" == "1" ]]; then

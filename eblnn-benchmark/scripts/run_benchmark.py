@@ -14,6 +14,7 @@ skipped unless --force is passed.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -29,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.data import RealDataPipeline
+from src.data_forecast import ForecastDataPipeline
 from src.evaluate import (
     compute_regression_metrics,
     run_disturbance_evaluation,
@@ -53,9 +55,9 @@ except ImportError:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the EB-LNN benchmark")
     parser.add_argument("--config", type=str,
-                        default=str(ROOT / "config" / "benchmark_config.yaml"))
+                        default=str(ROOT / "config" / "forecast_config.yaml"))
     parser.add_argument("--models", nargs="+", default=None,
-                        choices=["eblnn", "lnn", "lstm", "pid"])
+                        choices=["eblnn", "lnn", "lstm", "pid", "persistence"])
     parser.add_argument("--seeds", nargs="+", type=int, default=None)
     parser.add_argument("--output_dir", type=str, default=None)
     parser.add_argument("--no-wandb", action="store_true",
@@ -115,6 +117,11 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     data_cfg = config["data"]
+    protocol = data_cfg.get("protocol", "legacy-snapshot")
+    if protocol not in {"legacy-snapshot", "forecast-real-v1"}:
+        raise ValueError(f"Unsupported data protocol: {protocol}")
+    if protocol == "forecast-real-v1" and "pid" in models:
+        raise ValueError("Forecast v1 uses measured sensors, not inferred AFR; use persistence instead of PID.")
     train_cfg = config["training"]
     eblnn_cfg = config.get("eblnn", {})
     pid_cfg = config.get("pid", {})
@@ -133,6 +140,10 @@ def main() -> None:
 
     real_csv = resolve_path(ROOT, data_cfg.get("real_csv"))
     edge_csv = resolve_path(ROOT, data_cfg.get("edge_csv"))
+    source_sha256 = (
+        hashlib.sha256(Path(real_csv).read_bytes()).hexdigest()
+        if protocol == "forecast-real-v1" and real_csv is not None else None
+    )
 
     all_saved_runs = []
 
@@ -142,6 +153,31 @@ def main() -> None:
             seed_dir = output_dir / model_name / f"seed_{seed}"
             results_path = seed_dir / "results.json"
             if results_path.exists() and not args.force:
+                with open(results_path) as handle:
+                    previous = json.load(handle)
+                expected_config = {
+                    "data": data_cfg, "training": train_cfg, "model": model_cfg,
+                    "eblnn": eblnn_cfg if model_name == "eblnn" else None,
+                    "pid": pid_cfg if model_name == "pid" else None,
+                }
+                if (previous.get("protocol", "legacy-snapshot") != protocol
+                        or previous.get("model") != model_name
+                        or previous.get("seed") != seed
+                        or previous.get("config") != expected_config
+                        or previous.get("smoke_test", False) != args.smoke_test
+                        or (protocol == "forecast-real-v1"
+                            and previous.get("protocol_metadata", {}).get("source_sha256") != source_sha256)):
+                    raise ValueError(f"Existing results have a different protocol/config: {results_path}. "
+                                     "The source data may also have changed. "
+                                     "Use a new output directory or explicitly pass --force.")
+                if protocol == "forecast-real-v1":
+                    for relative in ("models/best_model.pth", "history.npz", "scalers.npz"):
+                        artifact = seed_dir / relative
+                        if not artifact.is_file() or artifact.stat().st_size == 0:
+                            raise ValueError(
+                                f"Cannot resume incomplete forecast results: {artifact} is missing or empty. "
+                                "Restore the artifact or explicitly pass --force to rerun."
+                            )
                 print(f"[skip] {model_name} seed={seed} already done -> {results_path}")
                 all_saved_runs.append({
                     "model": model_name, "seed": seed,
@@ -182,7 +218,7 @@ def main() -> None:
                     },
                 )
 
-            pipeline = RealDataPipeline(
+            pipeline_kwargs = dict(
                 real_csv=real_csv,
                 edge_csv=edge_csv,
                 scenarios=data_cfg.get("scenarios"),
@@ -194,7 +230,14 @@ def main() -> None:
                 test_size=data_cfg.get("test_size", 0.2),
                 val_size=data_cfg.get("val_size", 0.1),
                 seed=seed,
-            ).build()
+            )
+            if protocol == "forecast-real-v1":
+                pipeline = ForecastDataPipeline(
+                    horizon=data_cfg.get("horizon", 1), **pipeline_kwargs,
+                ).build()
+            else:
+                pipeline = RealDataPipeline(**pipeline_kwargs).build()
+            feature_names = getattr(pipeline, "feature_names", None)
 
             if args.smoke_test:
                 for split in ("train", "val"):
@@ -219,6 +262,7 @@ def main() -> None:
                 device=device,
                 input_scaler=pipeline.input_scaler,
                 target_scaler=pipeline.target_scaler,
+                feature_names=feature_names,
             )
             param_count = sum(p.numel() for p in model.parameters())
 
@@ -286,20 +330,29 @@ def main() -> None:
                 if inference_wall > 0 else float("nan")
             )
 
+            if protocol == "forecast-real-v1":
+                set_seed(seed)
             disturbance = run_disturbance_evaluation(
                 model=trainer.model, loader=evaluation_loader,
                 device=device, target_scaler=pipeline.target_scaler,
+                feature_names=feature_names,
             )
+            if protocol == "forecast-real-v1":
+                set_seed(seed)
             safety = run_safety_evaluation(
                 model=trainer.model, loader=evaluation_loader,
                 device=device, target_scaler=pipeline.target_scaler,
+                feature_names=feature_names,
             )
             disturbance_summary = summarize_disturbance_results(disturbance)
             safety_summary = summarize_safety_results(safety)
 
+            if protocol == "forecast-real-v1":
+                set_seed(seed)
             extreme = run_extreme_evaluation(
                 model=trainer.model, loader=evaluation_loader,
                 device=device, target_scaler=pipeline.target_scaler,
+                feature_names=feature_names,
             )
             extreme_summary = summarize_extreme_results(extreme)
 
@@ -315,6 +368,8 @@ def main() -> None:
 
             result = {
                 "model": model_name,
+                "protocol": protocol,
+                "protocol_metadata": getattr(pipeline, "protocol_metadata", {}),
                 "smoke_test": args.smoke_test,
                 "evaluation_split": "validation" if args.smoke_test else "test",
                 "seed": seed,
@@ -365,6 +420,13 @@ def main() -> None:
                 seed_dir / "history.npz",
                 **{key: np.asarray(values) for key, values in trainer.history.items()},
             )
+            np.savez(
+                seed_dir / "scalers.npz",
+                input_mean=pipeline.input_scaler.mean_,
+                input_scale=pipeline.input_scaler.scale_,
+                target_mean=pipeline.target_scaler.mean_,
+                target_scale=pipeline.target_scaler.scale_,
+            )
 
             # ---- log final summary metrics + finish wandb ----
             if wb_run is not None:
@@ -394,6 +456,7 @@ def main() -> None:
                     )
                     art.add_file(str(seed_dir / "results.json"))
                     art.add_file(str(seed_dir / "history.npz"))
+                    art.add_file(str(seed_dir / "scalers.npz"))
                     wb_run.log_artifact(art)
                 except Exception as exc:
                     print(f"[warn] could not log wandb artifact: {exc}")
@@ -417,6 +480,7 @@ def main() -> None:
         json.dump(
             {
                 "run_name": run_name, "models": models, "seeds": seeds,
+                "protocol": protocol,
                 "smoke_test": args.smoke_test,
                 "evaluation_split": "validation" if args.smoke_test else "test",
                 "device": device, "runs": all_saved_runs,
@@ -425,7 +489,7 @@ def main() -> None:
         )
 
     print(f"\nBenchmark outputs saved to {output_dir}")
-    print("Run compare_results.py to generate the final report.")
+    print(f"Run compare_results.py --results_dir {output_dir} to generate the report.")
 
 
 if __name__ == "__main__":

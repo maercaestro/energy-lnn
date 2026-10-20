@@ -1,6 +1,78 @@
 # eblnn-benchmark
 
-Benchmark folder for the final research comparison:
+## Current protocol: real-data forecasting v1
+
+**The October 19 target audit found that the legacy export copied the same
+`OutletT` into `current_temp` and `next_temp`. Its O2 target was also unshifted.
+Do not interpret the old `ebm-tuned-f6ozllp7` results as future-state forecasts.**
+The old data, checkpoints and configuration are preserved for provenance.
+
+The default is now [`forecast_config.yaml`](config/forecast_config.yaml),
+with run name `forecast-real-v1`:
+
+- Real source: `../dataset/cleaned_furnace_data.csv`. No synthetic augmentation.
+- Nine measured inputs: fuel flow, draft pressure, current outlet temperature,
+  inlet temperature, inlet flow, current O2, damper position, fuel pressure and
+  bridgewall temperature. Values retain their source units before scaling.
+- Targets: `OutletT` and `ExcessO2` **one recorded timestep ahead**, at each
+  timestep of a causal 30-step sequence. The horizon is configured explicitly.
+- `Date` is an integer sample ID, not a wall-clock timestamp. Consecutive
+  IDs are required; this follows the source's nominal one-minute sampling.
+- First 80% of rows train, next 10% validation, last 10% test. Split before
+  windowing; no inputs or targets cross splits or gaps. All seeds use the
+  same periods. Scalers fit on training windows only.
+- Perturbation RNGs reset per evaluation suite and seed, so each model sees
+  the same stochastic disturbance realizations rather than training-dependent
+  random draws.
+- EB-LNN, CfC/LNN and LSTM are compared against **persistence**: predict
+  future temperature/O2 as their current measured values. Legacy PID needs
+  a derived AFR feature and is intentionally excluded from this protocol.
+- No PINN-derived inputs: the pre-existing PINN was prepared before these
+  split boundaries. Synthetic LHS samples are operating points, not temporal
+  rollouts; shifting their rows would not produce valid forecasting targets.
+- EBM settings are starting values transferred from the legacy experiment,
+  **not validated forecasting hyperparameters**. Do not select settings using
+  test metrics. Old checkpoints are incompatible with the nine-input model.
+
+Source cleaning is inherited from the existing cleaned CSV. Outlier thresholds
+were calculated globally, before these splits. The cleaner also supports linear
+interpolation, but the saved cleaning report lists no interpolated-cell counts;
+interpolation leakage has not been demonstrated. Chronological splitting here
+does not retroactively make upstream preprocessing train-only; a stricter
+deployment study should also version and audit the cleaning process.
+
+Run a smoke test before starting a long VM job:
+
+```bash
+python eblnn-benchmark/scripts/run_benchmark.py --smoke-test
+# When ready, all four models and three seeds:
+python eblnn-benchmark/scripts/run_benchmark.py
+# Or launch in tmux using the existing VM launcher:
+bash eblnn-benchmark/scripts/run_vm.sh
+
+python eblnn-benchmark/scripts/compare_results.py
+python eblnn-benchmark/scripts/plot_results.py
+python -m unittest discover -s eblnn-benchmark/tests -v
+```
+
+Smoke mode evaluates validation subsets only, disables W&B and uses a separate
+`forecast-real-v1-smoke` run (or `smoke/` beneath `--output_dir`).
+Results record source SHA-256, sensor layout, forecast horizon and split ranges
+in `protocol_metadata`, plus fitted scaling statistics in `scalers.npz`.
+Resume refuses changed configs, protocols or source hashes, and missing/empty
+forecast checkpoints, histories or scalers.
+Safety metrics below count predicted threshold crossings; they do not establish
+closed-loop furnace safety. Composite rankings are descriptive, not proof of
+forecasting skill or statistical significance.
+
+## Historical snapshot benchmark
+
+The following describes the legacy real + synthetic experiment, not the new
+forecasting protocol. To reproduce it explicitly, pass
+`--config eblnn-benchmark/config/benchmark_config.yaml`; use explicit
+`--results_dir` when comparing/plotting its saved outputs.
+
+Legacy comparison:
 
 > **Energy-Based Liquid Neural Network (EB-LNN)** vs **Liquid NN (CfC)** vs **LSTM** vs a tuned **PID baseline**
 
@@ -29,32 +101,37 @@ Same as `lnn-test/`:
 - real data: `../dataset/real_furnace_eblnn.csv`
 - PINN edge cases: `../dataset/edge_cases_v2_eblnn.csv`
 
-## Quick start
+## Legacy quick start
 
 ```bash
 pip install -r eblnn-benchmark/requirements.txt
 
 # Full benchmark (all four models, three seeds)
-python eblnn-benchmark/scripts/run_benchmark.py
+python eblnn-benchmark/scripts/run_benchmark.py \
+    --config eblnn-benchmark/config/benchmark_config.yaml
 
 # Isolated wiring check: all four models, first seed, at most two epochs.
 # Evaluation uses validation data, never the held-out test loader.
-python eblnn-benchmark/scripts/run_benchmark.py --smoke-test
+python eblnn-benchmark/scripts/run_benchmark.py \
+    --config eblnn-benchmark/config/benchmark_config.yaml --smoke-test
 
 # Single seed of EB-LNN vs LSTM vs PID for a quick check
 python eblnn-benchmark/scripts/run_benchmark.py \
+    --config eblnn-benchmark/config/benchmark_config.yaml \
     --models eblnn lstm pid --seeds 42
 
 # Aggregate to comparison_report.md and comparison_summary.json
-python eblnn-benchmark/scripts/compare_results.py
+python eblnn-benchmark/scripts/compare_results.py \
+    --results_dir eblnn-benchmark/results/ebm-tuned-f6ozllp7
 
 # Publication figures
-python eblnn-benchmark/scripts/plot_results.py
+python eblnn-benchmark/scripts/plot_results.py \
+    --results_dir eblnn-benchmark/results/ebm-tuned-f6ozllp7
 ```
 
 ## Frozen EBM configuration
 
-The default run is `ebm-tuned-f6ozllp7`, selected from the 30-trial
+The historical run is `ebm-tuned-f6ozllp7`, selected from the 30-trial
 validation-only campaign by `best_val_physics` (0.01892160, seed 42).
 The frozen settings are `alpha=1.0`, `l2_reg=0.1`, `n_steps=20`,
 `step_size=0.01`, `noise_scale=0.005`, and `buffer_prob=0.75`.
@@ -62,8 +139,8 @@ Compared with the old benchmark config, both `l2_reg` and `buffer_prob`
 change; the tuning baseline already used `l2_reg=0.1`.
 Do not retune using benchmark test metrics.
 
-The new run name prevents resume logic from reusing the old `results/default`
-outputs. Aggregation and plotting default to the configured run name.
+Its run name prevents resume logic from reusing the old `results/default`
+outputs. Use explicit result paths for this historical run.
 `--smoke-test` disables W&B, uses batches of at most eight sequences and at
 most two batches for training/validation, and saves under
 `results/ebm-tuned-f6ozllp7-smoke`. With `--output_dir`, smoke outputs go in
@@ -83,6 +160,7 @@ python -m unittest discover -s eblnn-benchmark/tests -v
 For each seed of each model:
 - `results/<run>/<model>/seed_<seed>/results.json`
 - `results/<run>/<model>/seed_<seed>/history.npz`
+- `results/<run>/<model>/seed_<seed>/scalers.npz`
 - `results/<run>/<model>/seed_<seed>/models/best_model.pth`
 
 Aggregated:
@@ -113,7 +191,7 @@ export EBLNN_PYTHON=$(which python)
 export WANDB_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxx     # easiest
 # or:  wandb login                                  # writes ~/.netrc
 # or:  export NO_WANDB=1                            # disable entirely
-# or:  set wandb.mode=offline in benchmark_config.yaml and sync later
+# or:  set wandb.mode=offline in forecast_config.yaml and sync later
 
 bash eblnn-benchmark/scripts/run_vm.sh
 # detach with Ctrl-b d ; reattach with `tmux attach -t eblnn`
@@ -131,7 +209,7 @@ Environment variables understood by `run_vm.sh`:
 | :-- | :-- | :-- |
 | `EBLNN_PYTHON` | `python` | Python interpreter to use. |
 | `RUN_NAME` | config's `run_name` | Run name → results live under `results/$RUN_NAME/`. |
-| `CONFIG_PATH` | `eblnn-benchmark/config/benchmark_config.yaml` | Override config. |
+| `CONFIG_PATH` | `eblnn-benchmark/config/forecast_config.yaml` | Override config. |
 | `WANDB_API_KEY` | (unset) | wandb auth. |
 | `NO_WANDB` | `0` | Set to `1` to disable wandb logging. |
 | `FORCE` | `0` | Set to `1` to ignore existing `results.json` and rerun. |
@@ -145,7 +223,8 @@ One run per `(model, seed)`, grouped under `RUN_NAME`:
 - **Summary** scalars (test RMSE/MAE/R² for temp & O₂, noise-disturbance
   degradation, clean safety-violation rate, latency, throughput, wall time,
   parameter count).
-- **Artifacts**: `results.json` and `history.npz` per seed, archived in wandb.
+- **Artifacts**: `results.json`, `history.npz` and `scalers.npz` per seed,
+  archived in wandb.
 
 ## Notes
 

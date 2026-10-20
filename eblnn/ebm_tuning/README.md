@@ -1,5 +1,11 @@
 # EB-LNN EBM/CD Tuning
 
+> Historical snapshot campaign. The October 19 audit confirmed that its
+> temperature target duplicates an input and both targets are unshifted.
+> These settings are not validated forecasting hyperparameters. The corrected
+> real-only forecasting protocol is documented in
+> [the benchmark README](../../eblnn-benchmark/README.md).
+
 This campaign tunes only parameters introduced by the EB-LNN extension. The
 pilot-study CfC backbone, data composition, sequence length, optimizer, and
 training protocol remain fixed. Trials use the real furnace data plus all

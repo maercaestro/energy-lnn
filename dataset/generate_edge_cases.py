@@ -1,6 +1,10 @@
 """
 PINN v2 — Edge-Case Augmentation Generator
 =============================================
+Legacy snapshot exporter, NOT a future-state forecast dataset.
+Its current_temp and next_temp both refer to the same OutletT.
+Use eblnn-benchmark/config/forecast_config.yaml for real-data forecasting.
+
 Generates physics-guided edge-case scenarios that are absent from
 the real furnace data, using the trained PINN v2 as a surrogate.
 
@@ -355,6 +359,7 @@ EBLNN_COLS = ["fuel_flow", "air_fuel_ratio", "current_temp",
 # 8. Main generation pipeline
 # ──────────────────────────────────────────────────────────────────────────
 def generate(args):
+    print("WARNING: exporting legacy same-row snapshots, not future-state forecasting targets.")
     print("=" * 70)
     print("PINN v2 — EDGE-CASE AUGMENTATION GENERATOR")
     print("=" * 70)
