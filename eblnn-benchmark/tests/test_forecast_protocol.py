@@ -134,6 +134,15 @@ class ForecastProtocolTests(unittest.TestCase):
         with open(ROOT / "config" / "forecast_config.yaml") as handle:
             config = yaml.safe_load(handle)
         config["data"]["real_csv"] = str(self.path)
+        config["evaluation"] = {
+            "energy": {
+                "enabled": True,
+                "gaussian_noise_sigmas": [0.1, 0.5],
+                "extrapolation_shifts": [1.0],
+                "drift_features": ["current_temp"],
+                "drift_rates": [0.05, 0.2],
+            }
+        }
         config_path = self.root / "config.yaml"
         with open(config_path, "w") as handle:
             yaml.safe_dump(config, handle)
@@ -160,6 +169,12 @@ class ForecastProtocolTests(unittest.TestCase):
             self.assertIn("drift_bridgewall_temp_fast", result["extreme"])
             self.assertNotIn("dropout_air_fuel_ratio", result["disturbance"])
             self.assertTrue((seed_dir / "scalers.npz").is_file())
+            if name == "eblnn":
+                self.assertIn("energy_validation", result)
+                self.assertEqual(result["energy_validation"]["overall"]["n_cases"], 5)
+                self.assertTrue((seed_dir / "energy_scores.npz").is_file())
+            else:
+                self.assertNotIn("energy_validation", result)
             torch.load(seed_dir / "models" / "best_model.pth", weights_only=True)
         runs = compare_results.load_model_runs(output / "smoke")
         report = compare_results.build_markdown(

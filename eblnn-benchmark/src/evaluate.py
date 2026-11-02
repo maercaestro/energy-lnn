@@ -5,6 +5,7 @@ from typing import Callable, Dict, Iterable, Tuple
 import numpy as np
 import torch
 import torch.nn as nn
+from sklearn.metrics import average_precision_score, roc_auc_score
 from torch.utils.data import DataLoader
 
 
@@ -117,6 +118,173 @@ def make_feature_scale(feature_idx: int, scale: float):
         x[:, :, feature_idx] = x[:, :, feature_idx] * scale
         return x
     return fn
+
+
+def _collect_energy_scores(
+    model: nn.Module,
+    loader: DataLoader,
+    device: str,
+    perturb_fn: Callable[[torch.Tensor], torch.Tensor] | None = None,
+) -> np.ndarray:
+    energy_fn = getattr(model, "energy", None)
+    if not callable(energy_fn):
+        raise TypeError("Energy evaluation requires a model with an energy(x) method.")
+
+    scores = []
+    model.eval()
+    with torch.no_grad():
+        for x_batch, _ in loader:
+            if perturb_fn is not None:
+                x_batch = perturb_fn(x_batch.clone())
+            energy = energy_fn(x_batch.to(device))
+            scores.append(energy.detach().cpu().numpy().reshape(-1))
+    return np.concatenate(scores)
+
+
+def _average_ranks(values: np.ndarray) -> np.ndarray:
+    order = np.argsort(values, kind="mergesort")
+    ranks = np.empty(len(values), dtype=float)
+    sorted_values = values[order]
+    start = 0
+    while start < len(values):
+        end = start + 1
+        while end < len(values) and sorted_values[end] == sorted_values[start]:
+            end += 1
+        ranks[order[start:end]] = (start + end - 1) / 2
+        start = end
+    return ranks
+
+
+def _spearman(values_x: list[float], values_y: list[float]) -> float:
+    if len(values_x) < 2:
+        return float("nan")
+    rank_x = _average_ranks(np.asarray(values_x, dtype=float))
+    rank_y = _average_ranks(np.asarray(values_y, dtype=float))
+    if np.std(rank_x) <= 1e-12 or np.std(rank_y) <= 1e-12:
+        return float("nan")
+    return float(np.corrcoef(rank_x, rank_y)[0, 1])
+
+
+def run_energy_evaluation(
+    model: nn.Module,
+    loader: DataLoader,
+    device: str,
+    config: dict,
+    feature_names: list[str],
+) -> Tuple[Dict[str, object], Dict[str, np.ndarray]]:
+    """Measure whether higher EB-LNN energy separates perturbed from clean sequences."""
+    clean = _collect_energy_scores(model, loader, device)
+    raw_scores: Dict[str, np.ndarray] = {"clean": clean}
+    cases: list[tuple[str, str, float, Callable[[torch.Tensor], torch.Tensor]]] = []
+
+    for sigma in config.get("gaussian_noise_sigmas", []):
+        severity = float(sigma)
+        cases.append((
+            f"noise_sigma_{severity:g}", "gaussian_noise", severity,
+            make_gaussian_noise(severity),
+        ))
+
+    for shift in config.get("extrapolation_shifts", []):
+        severity = float(shift)
+        cases.append((
+            f"extrap_shift_{severity:g}sigma", "extrapolation_shift", severity,
+            make_extrapolation_shift(severity),
+        ))
+
+    for feature_name in config.get("drift_features", []):
+        if feature_name not in feature_names:
+            raise ValueError(
+                f"Unknown energy-evaluation drift feature {feature_name!r}; "
+                f"available features: {feature_names}"
+            )
+        feature_idx = feature_names.index(feature_name)
+        for rate in config.get("drift_rates", []):
+            severity = float(rate)
+            cases.append((
+                f"drift_{feature_name}_{severity:g}", f"drift_{feature_name}", severity,
+                make_sensor_drift(feature_idx, severity),
+            ))
+
+    if not cases:
+        raise ValueError("Energy evaluation requires at least one configured perturbation.")
+
+    case_results: Dict[str, dict] = {}
+    paired_clean = []
+    all_perturbed = []
+    family_points: Dict[str, list[tuple[float, float]]] = {}
+
+    for name, family, severity, perturb_fn in cases:
+        perturbed = _collect_energy_scores(model, loader, device, perturb_fn)
+        labels = np.concatenate([
+            np.zeros(clean.shape[0], dtype=np.int8),
+            np.ones(perturbed.shape[0], dtype=np.int8),
+        ])
+        scores = np.concatenate([clean, perturbed])
+        auroc = float(roc_auc_score(labels, scores))
+        average_precision = float(average_precision_score(labels, scores))
+        mean_energy = float(np.mean(perturbed))
+        raw_scores[name] = perturbed
+        paired_clean.append(clean)
+        all_perturbed.append(perturbed)
+        family_points.setdefault(family, []).append((severity, mean_energy))
+        case_results[name] = {
+            "family": family,
+            "severity": severity,
+            "n_samples": int(perturbed.shape[0]),
+            "mean_energy": mean_energy,
+            "std_energy": float(np.std(perturbed)),
+            "median_energy": float(np.median(perturbed)),
+            "q05_energy": float(np.quantile(perturbed, 0.05)),
+            "q95_energy": float(np.quantile(perturbed, 0.95)),
+            "mean_delta_from_clean": mean_energy - float(np.mean(clean)),
+            "fraction_above_clean_median": float(np.mean(perturbed > np.median(clean))),
+            "auroc": auroc,
+            "average_precision": average_precision,
+        }
+
+    overall_clean = np.concatenate(paired_clean)
+    overall_perturbed = np.concatenate(all_perturbed)
+    overall_labels = np.concatenate([
+        np.zeros(overall_clean.shape[0], dtype=np.int8),
+        np.ones(overall_perturbed.shape[0], dtype=np.int8),
+    ])
+    overall_scores = np.concatenate([overall_clean, overall_perturbed])
+    family_severity = {}
+    for family, points in family_points.items():
+        ordered = sorted(points)
+        family_severity[family] = {
+            "levels": [point[0] for point in ordered],
+            "mean_energies": [point[1] for point in ordered],
+            "spearman_severity_energy": _spearman(
+                [point[0] for point in ordered],
+                [point[1] for point in ordered],
+            ),
+        }
+
+    summary: Dict[str, object] = {
+        "score_direction": "higher_energy_is_more_abnormal",
+        "clean": {
+            "n_samples": int(clean.shape[0]),
+            "mean_energy": float(np.mean(clean)),
+            "std_energy": float(np.std(clean)),
+            "median_energy": float(np.median(clean)),
+            "q05_energy": float(np.quantile(clean, 0.05)),
+            "q95_energy": float(np.quantile(clean, 0.95)),
+        },
+        "overall": {
+            "auroc": float(roc_auc_score(overall_labels, overall_scores)),
+            "average_precision": float(average_precision_score(overall_labels, overall_scores)),
+            "mean_perturbed_energy": float(np.mean(overall_perturbed)),
+            "mean_delta_from_clean": float(np.mean(overall_perturbed) - np.mean(clean)),
+            "cases_with_positive_mean_delta": int(sum(
+                result["mean_delta_from_clean"] > 0 for result in case_results.values()
+            )),
+            "n_cases": len(case_results),
+        },
+        "families": family_severity,
+        "cases": case_results,
+    }
+    return summary, raw_scores
 
 
 # ─────────────────────────────────────────────────────────────────────

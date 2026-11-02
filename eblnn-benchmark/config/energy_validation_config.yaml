@@ -1,0 +1,62 @@
+run_name: energy-validation-v1
+
+wandb:
+  enabled: true
+  project: eblnn-paper
+  entity: null
+  mode: online
+  group: energy-validation-v1
+  tags: [eblnn, paper, energy-validation, chronological, real-data]
+
+experiment:
+  seeds: [42, 123, 456]
+  models: [eblnn]
+  device: auto
+
+data:
+  protocol: forecast-real-v1
+  real_csv: ../dataset/cleaned_furnace_data.csv
+  edge_csv: null
+  horizon: 1
+  seq_len: 30
+  stride: 30
+  batch_size: 64
+  test_size: 0.1
+  val_size: 0.1
+
+training:
+  epochs: 200
+  learning_rate: 0.001
+  patience: 20
+  min_delta: 0.0001
+  early_stopping: true
+  heartbeat: 25
+
+# Starting values transferred from the validation-only legacy tuning campaign.
+# This run validates the learned energy score; it does not retune on test data.
+eblnn:
+  alpha: 1.0
+  l2_reg: 0.1
+  margin: 0.0
+  energy_clamp: 20.0
+  buffer_capacity: 10000
+  buffer_prob: 0.75
+  langevin:
+    n_steps: 20
+    step_size: 0.01
+    noise_scale: 0.005
+    clip_x: 3.0
+
+evaluation:
+  energy:
+    enabled: true
+    gaussian_noise_sigmas: [0.1, 0.25, 0.5, 1.0, 2.0]
+    extrapolation_shifts: [1.0, 2.0, 3.0]
+    drift_features: [current_temp, current_o2]
+    drift_rates: [0.05, 0.1, 0.2]
+
+models:
+  eblnn:
+    hidden_size: 128
+    ebm_hidden_dims: [128, 64]
+    mixed_memory: true

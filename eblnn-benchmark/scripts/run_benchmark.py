@@ -33,6 +33,7 @@ from src.data import RealDataPipeline
 from src.data_forecast import ForecastDataPipeline
 from src.evaluate import (
     compute_regression_metrics,
+    run_energy_evaluation,
     run_disturbance_evaluation,
     run_extreme_evaluation,
     run_safety_evaluation,
@@ -125,6 +126,8 @@ def main() -> None:
     train_cfg = config["training"]
     eblnn_cfg = config.get("eblnn", {})
     pid_cfg = config.get("pid", {})
+    evaluation_cfg = config.get("evaluation", {}) or {}
+    energy_eval_cfg = evaluation_cfg.get("energy", {}) or {}
 
     wandb_cfg = config.get("wandb", {}) or {}
     use_wandb = (
@@ -160,6 +163,8 @@ def main() -> None:
                     "eblnn": eblnn_cfg if model_name == "eblnn" else None,
                     "pid": pid_cfg if model_name == "pid" else None,
                 }
+                if "evaluation" in config:
+                    expected_config["evaluation"] = evaluation_cfg
                 if (previous.get("protocol", "legacy-snapshot") != protocol
                         or previous.get("model") != model_name
                         or previous.get("seed") != seed
@@ -215,6 +220,7 @@ def main() -> None:
                         "model_cfg": model_cfg,
                         "eblnn": eblnn_cfg if model_name == "eblnn" else None,
                         "pid": pid_cfg if model_name == "pid" else None,
+                        "evaluation": evaluation_cfg,
                     },
                 )
 
@@ -366,6 +372,17 @@ def main() -> None:
                     "kp_o2": g.kp_o2,
                 }
 
+            energy_scores: dict[str, np.ndarray] | None = None
+            if model_name == "eblnn" and energy_eval_cfg.get("enabled", False):
+                energy_validation, energy_scores = run_energy_evaluation(
+                    model=trainer.model,
+                    loader=evaluation_loader,
+                    device=device,
+                    config=energy_eval_cfg,
+                    feature_names=feature_names,
+                )
+                extra["energy_validation"] = energy_validation
+
             result = {
                 "model": model_name,
                 "protocol": protocol,
@@ -412,6 +429,8 @@ def main() -> None:
                 "wall_time_sec": round(time.time() - start_time, 2),
                 **extra,
             }
+            if "evaluation" in config:
+                result["config"]["evaluation"] = evaluation_cfg
 
             seed_dir = output_dir / model_name / f"seed_{seed}"
             with open(seed_dir / "results.json", "w") as handle:
@@ -427,6 +446,9 @@ def main() -> None:
                 target_mean=pipeline.target_scaler.mean_,
                 target_scale=pipeline.target_scaler.scale_,
             )
+            energy_scores_path = seed_dir / "energy_scores.npz"
+            if energy_scores is not None:
+                np.savez_compressed(energy_scores_path, **energy_scores)
 
             # ---- log final summary metrics + finish wandb ----
             if wb_run is not None:
@@ -448,6 +470,35 @@ def main() -> None:
                 }
                 for k, v in wb_summary.items():
                     wb_run.summary[k] = v
+                if energy_scores is not None:
+                    energy_result = result["energy_validation"]
+                    for key, value in energy_result["overall"].items():
+                        wb_run.summary[f"summary/{model_name}/energy_{key}"] = value
+                    energy_table = wandb.Table(columns=[
+                        "case", "family", "severity", "mean_energy",
+                        "mean_delta_from_clean", "auroc", "average_precision",
+                    ])
+                    for case_name, case in energy_result["cases"].items():
+                        energy_table.add_data(
+                            case_name, case["family"], case["severity"],
+                            case["mean_energy"], case["mean_delta_from_clean"],
+                            case["auroc"], case["average_precision"],
+                        )
+                    wb_run.log({
+                        f"energy/{model_name}/case_metrics": energy_table,
+                        f"energy/{model_name}/clean_distribution": wandb.Histogram(
+                            energy_scores["clean"]
+                        ),
+                    })
+                    strongest_case = max(
+                        energy_result["cases"],
+                        key=lambda name: energy_result["cases"][name]["severity"],
+                    )
+                    wb_run.log({
+                        f"energy/{model_name}/{strongest_case}_distribution": wandb.Histogram(
+                            energy_scores[strongest_case]
+                        )
+                    })
                 # Upload the artifacts as a wandb artifact for archival.
                 try:
                     art = wandb.Artifact(
@@ -457,6 +508,8 @@ def main() -> None:
                     art.add_file(str(seed_dir / "results.json"))
                     art.add_file(str(seed_dir / "history.npz"))
                     art.add_file(str(seed_dir / "scalers.npz"))
+                    if energy_scores_path.is_file():
+                        art.add_file(str(energy_scores_path))
                     wb_run.log_artifact(art)
                 except Exception as exc:
                     print(f"[warn] could not log wandb artifact: {exc}")

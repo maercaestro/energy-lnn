@@ -55,6 +55,36 @@ python eblnn-benchmark/scripts/plot_results.py
 python -m unittest discover -s eblnn-benchmark/tests -v
 ```
 
+### Energy validation experiment
+
+The publication-focused energy experiment uses
+[`config/energy_validation_config.yaml`](config/energy_validation_config.yaml).
+It trains EB-LNN on the corrected chronological forecast protocol, then tests
+whether sequence energy separates clean inputs from increasing Gaussian noise,
+extrapolation shifts and sensor drift. Each seed saves summarized AUROC,
+average precision and severity-response results in `results.json`, with raw
+energy arrays in `energy_scores.npz`.
+
+W&B uses project `eblnn-paper`, group `energy-validation-v1`, one run per seed,
+and logs the case table, energy histograms, final summaries and result artifact.
+Set `wandb.entity` in the YAML when a team account is required.
+
+Run a bounded local wiring check first:
+
+```bash
+python eblnn-benchmark/scripts/run_benchmark.py \
+    --config eblnn-benchmark/config/energy_validation_config.yaml \
+    --smoke-test
+```
+
+The full three-seed run should use a CUDA VM:
+
+```bash
+export WANDB_API_KEY=...
+CONFIG_PATH=eblnn-benchmark/config/energy_validation_config.yaml \
+    bash eblnn-benchmark/scripts/run_vm.sh
+```
+
 Smoke mode evaluates validation subsets only, disables W&B and uses a separate
 `forecast-real-v1-smoke` run (or `smoke/` beneath `--output_dir`).
 Results record source SHA-256, sensor layout, forecast horizon and split ranges
