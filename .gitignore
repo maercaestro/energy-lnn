@@ -36,6 +36,9 @@ venvp/
 # VS Code
 .vscode/
 
+# Local thesis manuscript and build artifacts
+thesis_eblnn/
+
 # Data files (generated)
 data/*.csv
 !data/.gitkeep
