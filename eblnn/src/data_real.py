@@ -109,6 +109,7 @@ class RealDataPipeline:
         test_size: float = 0.2,
         val_size: float = 0.1,
         seed: int = 42,
+        include_hazard_labels: bool = False,
     ) -> None:
         self.real_csv = real_csv
         self.edge_csv = edge_csv
@@ -121,6 +122,7 @@ class RealDataPipeline:
         self.test_size = test_size
         self.val_size = val_size
         self.seed = seed
+        self.include_hazard_labels = include_hazard_labels
 
         # Populated by build()
         self.input_scaler: Optional[StandardScaler] = None
@@ -168,6 +170,7 @@ class RealDataPipeline:
         rng = np.random.default_rng(self.seed)
         all_x: list[np.ndarray] = []
         all_y: list[np.ndarray] = []
+        all_hazard_labels: list[np.ndarray] = []
 
         # ── 1. Real data ─────────────────────────────────────────────
         if self.real_csv is not None:
@@ -180,6 +183,7 @@ class RealDataPipeline:
             )
             all_x.append(x_seq)
             all_y.append(y_seq)
+            all_hazard_labels.append(np.zeros(len(x_seq), dtype=np.float32))
             self.data_summary["real_rows"] = len(df_real)
             self.data_summary["real_sequences"] = len(x_seq)
             print(
@@ -247,6 +251,7 @@ class RealDataPipeline:
                 y_e = np.concatenate(edge_y_list)
                 all_x.append(x_e)
                 all_y.append(y_e)
+                all_hazard_labels.append(np.ones(len(x_e), dtype=np.float32))
                 self.data_summary["edge_rows"] = len(df_edge)
                 self.data_summary["edge_sequences"] = len(x_e)
                 print(
@@ -264,6 +269,7 @@ class RealDataPipeline:
 
         x_all = np.concatenate(all_x)
         y_all = np.concatenate(all_y)
+        hazard_all = np.concatenate(all_hazard_labels)
         self.data_summary["total_sequences"] = len(x_all)
         print(
             f"Total     : {len(x_all):,} sequences  "
@@ -271,11 +277,23 @@ class RealDataPipeline:
         )
 
         # ── 4. Train / Val / Test split ──────────────────────────────
-        x_tr, x_te, y_tr, y_te = train_test_split(
-            x_all, y_all, test_size=self.test_size, random_state=self.seed
+        stratify_labels = (
+            hazard_all
+            if self.include_hazard_labels and len(np.unique(hazard_all)) > 1
+            else None
         )
-        x_val, x_te, y_val, y_te = train_test_split(
-            x_te, y_te, test_size=0.5, random_state=self.seed
+        x_tr, x_te, y_tr, y_te, h_tr, h_te = train_test_split(
+            x_all, y_all, hazard_all,
+            test_size=self.test_size,
+            random_state=self.seed,
+            stratify=stratify_labels,
+        )
+        heldout_stratify = h_te if stratify_labels is not None else None
+        x_val, x_te, y_val, y_te, h_val, h_te = train_test_split(
+            x_te, y_te, h_te,
+            test_size=0.5,
+            random_state=self.seed,
+            stratify=heldout_stratify,
         )
         print(
             f"Split     : {len(x_tr):,} train / "
@@ -305,13 +323,16 @@ class RealDataPipeline:
         print("Scaling complete")
 
         # ── 6. DataLoaders ───────────────────────────────────────────
-        def _loader(xa, ya, shuffle: bool) -> DataLoader:
-            ds = TensorDataset(torch.FloatTensor(xa), torch.FloatTensor(ya))
+        def _loader(xa, ya, ha, shuffle: bool) -> DataLoader:
+            tensors = [torch.FloatTensor(xa), torch.FloatTensor(ya)]
+            if self.include_hazard_labels:
+                tensors.append(torch.FloatTensor(ha))
+            ds = TensorDataset(*tensors)
             return DataLoader(ds, batch_size=self.batch_size, shuffle=shuffle)
 
-        self.train_loader = _loader(x_tr, y_tr, shuffle=True)
-        self.val_loader = _loader(x_val, y_val, shuffle=False)
-        self.test_loader = _loader(x_te, y_te, shuffle=False)
+        self.train_loader = _loader(x_tr, y_tr, h_tr, shuffle=True)
+        self.val_loader = _loader(x_val, y_val, h_val, shuffle=False)
+        self.test_loader = _loader(x_te, y_te, h_te, shuffle=False)
 
         print("DataLoaders ready\n")
         return self

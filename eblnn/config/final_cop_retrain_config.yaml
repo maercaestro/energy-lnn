@@ -1,0 +1,45 @@
+# Final COP-informed retraining campaign.
+# Uses the selected Bayesian-search configuration from run f6ozllp7.
+real_csv: "real_furnace_eblnn.csv"
+edge_csv: "edge_cases_cop_v3_eblnn.csv"
+scenarios: null
+confidence_filter: null
+edge_fraction: 1.0
+seq_len: 30
+stride: 30
+batch_size: 64
+test_size: 0.2
+val_size: 0.1
+seed: 42
+include_hazard_labels: true
+
+hidden_size: 128
+ebm_hidden_dims: [128, 64]
+epochs: 200
+learning_rate: 0.001
+patience: 20
+min_delta: 0.0001
+early_stopping: true
+margin: 0.0
+energy_clamp: 20.0
+clip_x: 3.0
+buffer_capacity: 10000
+
+alpha: 1.0
+l2_reg: 0.1
+n_steps: 20
+step_size: 0.01
+noise_scale: 0.005
+buffer_prob: 0.75
+
+# Dual objective: synthetic COP rows train forecasting but are explicitly
+# ranked above historical rows by the energy head.
+cop_weight: 1.0
+cop_margin: 1.0
+cop_checkpoint_weight: 1.0
+
+device: auto
+wandb:
+  project: eblnn-final-cop-retrain
+  entity: null
+  tags: [eblnn, final, cop, physics-guided, analytical-fringe]

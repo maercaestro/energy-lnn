@@ -6,7 +6,7 @@ Its current_temp and next_temp both refer to the same OutletT.
 Use eblnn-benchmark/config/forecast_config.yaml for real-data forecasting.
 
 Generates physics-guided edge-case scenarios that are absent from
-the real furnace data, using the trained PINN v2 as a surrogate.
+the real furnace data, using physics parameters learned by PINN v2.
 
 Scenarios:
   S1  Flame-Out / Rich Combustion    (low O2)
@@ -36,6 +36,7 @@ import argparse
 import os
 import sys
 import json
+from collections import defaultdict
 from datetime import datetime
 from scipy.stats import qmc            # Latin Hypercube Sampling
 
@@ -183,12 +184,14 @@ def define_scenarios(stats: dict) -> dict:
 
     scenarios = {}
 
-    # S1 — Flame-Out / Rich Combustion (low O2)
-    # High fuel, restricted air
+    # S1 — Flame-Out / Rich Combustion
+    # Fuel remains available, combustion air is lost, and the cold-feed
+    # envelope allows the outlet to fall below the engineering threshold.
     s1 = default_bounds()
+    s1["InletT"]    = (180.0, 240.0)
     s1["FGFlow"]    = (1800.0, 2500.0)     # well above normal max ~1800
-    s1["OP_Damper"] = (36.0, 42.0)         # restricted damper
-    s1["DraftP"]    = (-2.0, 0.5)          # weak draft
+    s1["OP_Damper"] = (20.0, 38.0)         # restricted damper
+    s1["DraftP"]    = (-1.0, 0.5)          # weak/reversed draft
     scenarios["S1_flame_out"] = s1
 
     # S2 — Air Leak / Excessive Draft (high O2)
@@ -199,37 +202,33 @@ def define_scenarios(stats: dict) -> dict:
     s2["FGFlow"]    = (800.0, 1200.0)      # low-to-normal firing
     scenarios["S2_air_leak"] = s2
 
-    # S3 — Tube Rupture / Overheating (high ΔT, high Bridgewall)
-    # Low process flow, high firing
+    # S3 — Tube Rupture / Overheating
+    # Severe loss of process flow with sustained high firing.
     s3 = default_bounds()
-    s3["InletFlow"]  = (245.0, 310.0)      # reduced process flow
-    s3["FGFlow"]     = (1600.0, 2000.0)    # high firing
-    s3["Bridgewall"] = (700.0, 800.0)      # extending beyond real max ~723
+    s3["InletFlow"]  = (30.0, 100.0)
+    s3["FGFlow"]     = (3000.0, 5000.0)
+    s3["Bridgewall"] = (900.0, 1100.0)
     scenarios["S3_tube_rupture"] = s3
 
     # S4 — Positive Furnace Pressure (blowback)
     # DraftP near zero or positive, restricted damper
     s4 = default_bounds()
-    s4["DraftP"]    = (-0.5, 3.0)          # positive pressure zone
+    s4["DraftP"]    = (10.0, 15.0)         # engineering critical zone
     s4["OP_Damper"] = (36.0, 45.0)         # restricted
     scenarios["S4_positive_pressure"] = s4
 
     # S5 — Fuel Trip / Cold Furnace (loss of firing)
     # Very low or zero fuel flow
     s5 = default_bounds()
-    s5["FGFlow"]    = (0.0, 500.0)         # near-zero firing
-    s5["FGPressure"] = (0.2, 0.8)          # low fuel pressure (supply issue)
+    s5["FGFlow"]    = (0.0, 50.0)
+    s5["FGPressure"] = (0.0, 0.3)
     scenarios["S5_fuel_trip"] = s5
 
     # S6 — Fuel Gas Contamination (lower effective LHV)
-    # Normal FGFlow by volume, but energy content is 60–85% of clean gas.
-    # We simulate by scaling FGFlow down (the PINN learned FGFlow → energy).
-    # A real 1400 Nm³/hr of contaminated gas ≈ 840–1190 Nm³/hr of clean gas.
+    # Normal indicated fuel flow, but effective LHV is 60–85% of clean gas.
     s6 = default_bounds()
-    s6["FGFlow"]     = (800.0, 1200.0)     # effective energy = contaminated
-    s6["FGPressure"] = (0.8, 1.3)          # slightly low supply pressure
-    # Everything else stays normal — that's the danger: operators see "normal" but
-    # the furnace isn't getting enough energy.
+    s6["FGFlow"]     = (1200.0, 1600.0)
+    s6["FGPressure"] = (0.8, 1.3)
     scenarios["S6_fuel_contamination"] = s6
 
     return scenarios
@@ -240,7 +239,7 @@ def define_scenarios(stats: dict) -> dict:
 # ──────────────────────────────────────────────────────────────────────────
 @torch.no_grad()
 def physics_predict(model, X_raw: np.ndarray, s_name: str,
-                    rng: np.random.Generator) -> np.ndarray:
+                    rng: np.random.Generator) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """
     Compute OutletT and ExcessO2 from analytical physics equations,
     using the PINN's learned θ_eff and a first-principles air-supply model.
@@ -268,12 +267,15 @@ def physics_predict(model, X_raw: np.ndarray, s_name: str,
 
     m_proc = InletFlow * KBBL_DAY_TO_KG_S                          # kg/s
     m_fuel = FGFlow * CONSTANTS["RHO_FUEL"] / 3600.0               # kg/s
-    lhv    = CONSTANTS["LHV"]
+    lhv_factor = np.ones(len(X_raw), dtype=np.float64)
 
-    # --- Combustion efficiency factor for contamination ---
-    # Contaminated gas: random LHV multiplier 0.60–0.85
+    # Flame-out retains indicated fuel flow but releases little useful heat.
+    if "flame_out" in s_name:
+        lhv_factor = rng.uniform(0.0, 0.05, size=len(X_raw))
+    # Contaminated gas retains indicated flow with 60–85% effective LHV.
     if "contamination" in s_name:
-        lhv = lhv * rng.uniform(0.60, 0.85, size=len(X_raw))
+        lhv_factor = rng.uniform(0.60, 0.85, size=len(X_raw))
+    lhv = CONSTANTS["LHV"] * lhv_factor
 
     # --- Energy balance → OutletT ---
     Q_in    = m_fuel * lhv                                          # kW
@@ -296,28 +298,65 @@ def physics_predict(model, X_raw: np.ndarray, s_name: str,
     m_air = np.clip(m_air, 0.0, None)               # can't be negative mass
 
     # --- Excess-air ratio λ ---
-    lam = m_air / (m_fuel * afr_stoich + 1e-8)
-    # Numerically stable soft lower bound: λ >= 1.0 (can't burn more than stoich)
-    # Use stable softplus: softplus(x) = x if x > 20, else log1p(exp(x))
-    shift = lam - 1.0
-    lam_soft = np.where(shift > 20.0, shift, np.log1p(np.exp(np.clip(shift, -50, 20))))
-    lam = 1.0 + lam_soft
+    lam_raw = m_air / (m_fuel * afr_stoich + 1e-8)
+    lam = np.maximum(lam_raw, 1.0)
 
     # ExcessO2 = 21 × (λ − 1) / λ
     O2 = 21.0 * (lam - 1.0) / lam
 
     # --- Clamp to physically plausible ranges ---
-    T_out = np.clip(T_out, InletT, 500.0)     # can't be below inlet
+    T_out = np.clip(T_out, InletT, 550.0)
     O2    = np.clip(O2, 0.0, 21.0)            # 0–21% range
 
-    return np.column_stack([T_out, O2])
+    diagnostics = {
+        "lambda": lam_raw,
+        "lhv_factor": lhv_factor,
+        "thermal_gain_ratio": lhv_factor.copy(),
+        "analytical_air_fuel_ratio": m_air / (m_fuel + 1e-8),
+    }
+    return np.column_stack([T_out, O2]), diagnostics
+
+
+def scenario_acceptance_mask(
+    s_name: str,
+    X_raw: np.ndarray,
+    preds: np.ndarray,
+    diagnostics: dict[str, np.ndarray],
+) -> np.ndarray:
+    """Engineering acceptance rules agreed for the final scenario dataset."""
+    outlet = preds[:, 0]
+    oxygen = preds[:, 1]
+    delta_t = outlet - X_raw[:, _I["InletT"]]
+    if s_name == "S1_flame_out":
+        return (outlet < 250.0) & (oxygen < 1.0) & (X_raw[:, _I["FGFlow"]] > 1800.0)
+    if s_name == "S2_air_leak":
+        return (X_raw[:, _I["DraftP"]] < -9.0) & (oxygen > 6.0)
+    if s_name == "S3_tube_rupture":
+        return outlet > 460.0
+    if s_name == "S4_positive_pressure":
+        return X_raw[:, _I["DraftP"]] > 10.0
+    if s_name == "S5_fuel_trip":
+        return (
+            (X_raw[:, _I["FGFlow"]] < 50.0)
+            & (X_raw[:, _I["FGPressure"]] < 0.8)
+            & (delta_t < 10.0)
+        )
+    if s_name == "S6_fuel_contamination":
+        ratio = diagnostics["thermal_gain_ratio"]
+        return (ratio >= 0.60) & (ratio <= 0.85)
+    raise ValueError(f"Unknown scenario {s_name!r}.")
 
 
 # ──────────────────────────────────────────────────────────────────────────
 # 7. Derive 5-column EBLNN features
 # ──────────────────────────────────────────────────────────────────────────
 @torch.no_grad()
-def derive_eblnn_cols(model, X_raw: np.ndarray, preds: np.ndarray):
+def derive_eblnn_cols(
+    model,
+    X_raw: np.ndarray,
+    preds: np.ndarray,
+    analytical_air_fuel_ratio: np.ndarray | None = None,
+):
     """
     Derive 5 EBLNN columns from 7 PINN features + 2 PINN outputs.
 
@@ -335,11 +374,12 @@ def derive_eblnn_cols(model, X_raw: np.ndarray, preds: np.ndarray):
     fuel_flow_kgs = fg_flow_nm3h * rho_fuel / 3600.0
 
     # Air supply from PINN's air_net (DraftP, OP_Damper, FGFlow)
-    x_raw_t = torch.tensor(X_raw, dtype=torch.float32)
-    air_supply = model.air_supply(x_raw_t).numpy()  # (N,)
-
-    # Air-fuel ratio
-    afr = air_supply / (fuel_flow_kgs + 1e-8)
+    if analytical_air_fuel_ratio is None:
+        x_raw_t = torch.tensor(X_raw, dtype=torch.float32)
+        air_supply = model.air_supply(x_raw_t).numpy()
+        afr = air_supply / (fuel_flow_kgs + 1e-8)
+    else:
+        afr = analytical_air_fuel_ratio
 
     # Temperatures
     current_temp = preds[:, 0]   # OutletT
@@ -383,34 +423,78 @@ def generate(args):
     n = args.n_per_scenario
 
     for s_name, bounds in scenarios.items():
-        print(f"\n🔧 Scenario: {s_name}  ({n:,} samples)")
+        print(f"\n🔧 Scenario: {s_name}  ({n:,} accepted samples)")
+        accepted_x = []
+        accepted_preds = []
+        accepted_diagnostics = defaultdict(list)
+        attempted = 0
+        for _ in range(50):
+            remaining = n - sum(len(values) for values in accepted_x)
+            if remaining <= 0:
+                break
+            batch_n = max(10_000, remaining * 2)
+            X_batch = lhs_sample(
+                bounds, batch_n, seed=int(rng.integers(0, 2**31)),
+            )
+            for j, col in enumerate(FEATURE_COLS):
+                X_batch[:, j] += generate_ar1_noise(
+                    batch_n, phi_dict[col], sigma_dict[col], rng,
+                )
+            preds_batch, diagnostics_batch = physics_predict(
+                model, X_batch, s_name, rng,
+            )
+            for j, col in enumerate(TARGET_COLS):
+                preds_batch[:, j] += generate_ar1_noise(
+                    batch_n, phi_dict[col], sigma_dict[col], rng,
+                )
+            preds_batch[:, 0] = np.clip(preds_batch[:, 0], 0.0, 550.0)
+            preds_batch[:, 1] = np.clip(preds_batch[:, 1], 0.0, 21.0)
+            mask = scenario_acceptance_mask(
+                s_name, X_batch, preds_batch, diagnostics_batch,
+            )
+            attempted += batch_n
+            if np.any(mask):
+                accepted_x.append(X_batch[mask])
+                accepted_preds.append(preds_batch[mask])
+                for key, values in diagnostics_batch.items():
+                    accepted_diagnostics[key].append(values[mask])
 
-        # 1. LHS sampling of inputs
-        X_raw = lhs_sample(bounds, n, seed=rng.integers(0, 2**31))
-
-        # 2. Physics-only predictions (analytical, not MLP)
-        preds = physics_predict(model, X_raw, s_name, rng)
-
-        # 3. Add AR(1) coloured noise to all columns
-        for j, col in enumerate(FEATURE_COLS):
-            noise = generate_ar1_noise(n, phi_dict[col], sigma_dict[col], rng)
-            X_raw[:, j] += noise
-
-        for j, col in enumerate(TARGET_COLS):
-            noise = generate_ar1_noise(n, phi_dict[col], sigma_dict[col], rng)
-            preds[:, j] += noise
+        accepted_count = sum(len(values) for values in accepted_x)
+        if accepted_count < n:
+            raise RuntimeError(
+                f"Scenario {s_name} produced only {accepted_count:,} accepted "
+                f"rows from {attempted:,} candidates."
+            )
+        X_raw = np.concatenate(accepted_x)[:n]
+        preds = np.concatenate(accepted_preds)[:n]
+        diagnostics = {
+            key: np.concatenate(parts)[:n]
+            for key, parts in accepted_diagnostics.items()
+        }
+        print(
+            f"   Accepted {n:,}/{attempted:,} candidates "
+            f"({100 * n / attempted:.2f}%)"
+        )
 
         # 4. Mahalanobis distance (confidence flag)
         mahal = compute_mahal_distances(X_raw, mu_mah, cov_inv)
 
         # 5. Derive 5 EBLNN columns
-        eblnn = derive_eblnn_cols(model, X_raw, preds)
+        eblnn = derive_eblnn_cols(
+            model,
+            X_raw,
+            preds,
+            diagnostics["analytical_air_fuel_ratio"],
+        )
 
         # 6. Build DataFrame
         df = pd.DataFrame(X_raw, columns=FEATURE_COLS)
         df["OutletT"]   = preds[:, 0]
         df["ExcessO2"]  = preds[:, 1]
         df["scenario"]  = s_name
+        df["lambda"] = diagnostics["lambda"]
+        df["lhv_factor"] = diagnostics["lhv_factor"]
+        df["thermal_gain_ratio"] = diagnostics["thermal_gain_ratio"]
         df["mahal_dist"] = mahal
         df["confidence"] = np.where(mahal <= 3.0, "high",
                            np.where(mahal <= 5.0, "medium", "low"))
@@ -502,6 +586,22 @@ def generate(args):
         "ar1_phi": {k: round(v, 4) for k, v in phi_dict.items()},
         "ar1_sigma": {k: round(v, 4) for k, v in sigma_dict.items()},
         "noise_type": "AR(1) coloured noise",
+        "temperature_source": (
+            "Analytical energy balance using theta_eff learned by PINN v2; "
+            "not the PINN MLP prediction head."
+        ),
+        "scenario_acceptance_rules": {
+            "S1_flame_out": "OutletT < 250 C, ExcessO2 < 1%, FGFlow > 1800 Nm3/h",
+            "S2_air_leak": "DraftP < -9 mmH2O, ExcessO2 > 6%",
+            "S3_tube_rupture": "OutletT > 460 C",
+            "S4_positive_pressure": "DraftP > 10 mmH2O",
+            "S5_fuel_trip": (
+                "FGFlow < 50 Nm3/h, FGPressure < 0.8 kg/cm2g, deltaT < 10 C"
+            ),
+            "S6_fuel_contamination": (
+                "Effective LHV ratio 0.60-0.85 at normal indicated fuel flow"
+            ),
+        },
         "confidence_thresholds": {"high": "mahal <= 3", "medium": "3 < mahal <= 5", "low": "mahal > 5"},
         "files": {
             "full_edge_cases": out_path,

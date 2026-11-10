@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 import os
+import pickle
 import sys
 import time
 from pathlib import Path
@@ -43,6 +45,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--step_size", type=float)
     parser.add_argument("--noise_scale", type=float)
     parser.add_argument("--buffer_prob", type=float)
+    parser.add_argument("--epochs", type=int)
+    parser.add_argument(
+        "--output-dir",
+        help="Versioned output directory. Defaults to the historical tuning location.",
+    )
     parser.add_argument("--no-wandb", action="store_true")
     return parser.parse_args()
 
@@ -67,13 +74,21 @@ def choose_device(requested: str) -> str:
     return requested
 
 
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def main() -> None:
     args = parse_args()
     config = load_config(args.config)
     overrides = {
         name: value
         for name, value in vars(args).items()
-        if name not in {"config", "no_wandb"} and value is not None
+        if name not in {"config", "no_wandb", "output_dir"} and value is not None
     }
     config.update(overrides)
     use_wandb = WANDB_AVAILABLE and not args.no_wandb
@@ -102,12 +117,18 @@ def main() -> None:
     set_seed(config["seed"])
     device = choose_device(config.get("device", "auto"))
     data_dir = ROOT.parent / "dataset"
-    output_dir = ROOT / "results" / "ebm_tuning" / (run.id if run else "local")
+    output_dir = (
+        Path(args.output_dir).resolve()
+        if args.output_dir
+        else ROOT / "results" / "ebm_tuning" / (run.id if run else "local")
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
+    real_path = data_dir / config["real_csv"]
+    edge_path = data_dir / config["edge_csv"]
 
     pipeline = RealDataPipeline(
-        real_csv=str(data_dir / config["real_csv"]),
-        edge_csv=str(data_dir / config["edge_csv"]),
+        real_csv=str(real_path),
+        edge_csv=str(edge_path),
         scenarios=config.get("scenarios"),
         confidence_filter=config.get("confidence_filter"),
         edge_fraction=config["edge_fraction"],
@@ -117,6 +138,7 @@ def main() -> None:
         test_size=config["test_size"],
         val_size=config["val_size"],
         seed=config["seed"],
+        include_hazard_labels=config.get("include_hazard_labels", False),
     ).build()
 
     model = create_model(
@@ -150,6 +172,22 @@ def main() -> None:
         val_loader=pipeline.val_loader,
         save_path=str(output_dir / "models"),
     )
+    best_model_path = output_dir / "models" / "best_model.pth"
+    model.load_state_dict(
+        torch.load(best_model_path, map_location=device, weights_only=True)
+    )
+    test_metrics = trainer.evaluate(
+        test_loader=pipeline.test_loader,
+        target_scaler=pipeline.target_scaler,
+    )
+    with (output_dir / "scalers.pkl").open("wb") as handle:
+        pickle.dump(
+            {
+                "input_scaler": pipeline.input_scaler,
+                "target_scaler": pipeline.target_scaler,
+            },
+            handle,
+        )
     result = {
         "config": config,
         "device": device,
@@ -158,6 +196,15 @@ def main() -> None:
         "best_epoch": trainer.best_epoch,
         "epochs_run": len(trainer.history["train_loss"]),
         "final_cd_gap": trainer.history["cd_gap"][-1],
+        "test_metrics": test_metrics,
+        "protocol_warning": (
+            "Legacy same-row snapshot protocol with random sequence splitting; "
+            "not the corrected future-state forecasting protocol."
+        ),
+        "source_sha256": {
+            config["real_csv"]: sha256_file(real_path),
+            config["edge_csv"]: sha256_file(edge_path),
+        },
         "wall_time_sec": round(time.time() - started_at, 1),
     }
     summary_path = output_dir / "trial.json"

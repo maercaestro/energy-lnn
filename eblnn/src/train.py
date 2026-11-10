@@ -35,6 +35,7 @@ from typing import Dict, Optional
 import numpy as np
 import torch
 import torch.optim as optim
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 try:
@@ -88,6 +89,11 @@ class GenerativeTrainer:
         self.patience = config.get("patience", 20)
         self.min_delta = config.get("min_delta", 1e-4)
         self.early_stopping = config.get("early_stopping", True)
+        self.cop_weight = float(config.get("cop_weight", 0.0))
+        self.cop_margin = float(config.get("cop_margin", 1.0))
+        self.cop_checkpoint_weight = float(
+            config.get("cop_checkpoint_weight", 0.0)
+        )
 
         # ---- Buffer config ----
         buf_capacity = config.get("buffer_capacity", 10_000)
@@ -118,6 +124,7 @@ class GenerativeTrainer:
             "train_phys": [], "val_phys": [],
             "train_cd": [],   "val_cd": [],
             "e_pos": [],      "e_neg": [],    "cd_gap": [],
+            "train_cop": [],  "val_cop": [],  "e_hazard": [],
             "val_phys_loss": [],   # used for early stopping
         }
         self.best_val_loss = float("inf")
@@ -160,17 +167,77 @@ class GenerativeTrainer:
 
     # ------------------------------------------------------------------
 
+    def _joint_loss(
+        self,
+        phys_pred: torch.Tensor,
+        target: torch.Tensor,
+        energies: torch.Tensor,
+        fantasy_energies: torch.Tensor,
+        hazard_labels: Optional[torch.Tensor],
+    ) -> tuple[torch.Tensor, Dict[str, float]]:
+        if hazard_labels is None or self.cop_weight <= 0:
+            loss, metrics, _ = self.criterion(
+                phys_pred, target, energies, fantasy_energies
+            )
+            metrics["loss_cop"] = 0.0
+            metrics["e_hazard"] = float("nan")
+            return loss, metrics
+
+        safe_mask = hazard_labels < 0.5
+        hazard_mask = ~safe_mask
+        if not torch.any(safe_mask) or not torch.any(hazard_mask):
+            raise RuntimeError(
+                "COP-aware batches require both historical and hazard sequences."
+            )
+        safe_energy = energies[safe_mask]
+        hazard_energy = energies[hazard_mask]
+        physics_loss = self.criterion.phys_loss(phys_pred, target)
+        cd_loss, cd_metrics = self.criterion.cd_loss(
+            safe_energy, fantasy_energies
+        )
+        safe_reference = safe_energy[
+            torch.arange(len(hazard_energy), device=self.device)
+            % len(safe_energy)
+        ]
+        cop_loss = F.relu(
+            self.cop_margin + safe_reference - hazard_energy
+        ).mean()
+        total = physics_loss + self.alpha * cd_loss + self.cop_weight * cop_loss
+        metrics = {
+            "loss_total": total.item(),
+            "loss_physics": physics_loss.item(),
+            "loss_cd": cd_loss.item(),
+            "loss_cop": cop_loss.item(),
+            "e_hazard": hazard_energy.mean().item(),
+            **cd_metrics,
+        }
+        return total, metrics
+
+    @staticmethod
+    def _unpack_batch(batch):
+        if len(batch) == 2:
+            return batch[0], batch[1], None
+        if len(batch) == 3:
+            return batch
+        raise ValueError(f"Expected 2 or 3 batch tensors, got {len(batch)}.")
+
+    # ------------------------------------------------------------------
+
     def train_epoch(self, loader: DataLoader) -> Dict[str, float]:
         self.model.train()
 
         totals: Dict[str, float] = {
             "loss": 0.0, "phys": 0.0, "cd": 0.0,
             "e_pos": 0.0, "e_neg": 0.0, "cd_gap": 0.0,
+            "cop": 0.0, "e_hazard": 0.0,
         }
 
-        for x_pos, y_pos in loader:
+        for batch in loader:
+            x_pos, y_pos, hazard_labels = self._unpack_batch(batch)
             x_pos = x_pos.to(self.device)   # (B, T, input_size)
             y_pos = y_pos.to(self.device)   # (B, T, target_size)
+            if hazard_labels is not None:
+                hazard_labels = hazard_labels.to(self.device)
 
             B = x_pos.size(0)
 
@@ -180,15 +247,22 @@ class GenerativeTrainer:
 
             # --- 2. Generate fantasy (negative) state ---
             seq_shape = (x_pos.size(1), x_pos.size(2))
-            x_neg = self._get_fantasy(B, seq_shape)      # (B, T, input_size)
+            fantasy_count = (
+                int((hazard_labels < 0.5).sum().item())
+                if hazard_labels is not None and self.cop_weight > 0
+                else B
+            )
+            x_neg = self._get_fantasy(
+                fantasy_count, seq_shape
+            )
 
             # --- 3. Negative energy ---
             _, e_neg_seq, _ = self.model(x_neg)
             e_neg = e_neg_seq.squeeze(-1).mean(dim=1)    # (B,)
 
             # --- 4. Joint loss ---
-            loss, metrics, phys_loss_val = self.criterion(
-                phys_pred, y_pos, e_pos, e_neg
+            loss, metrics = self._joint_loss(
+                phys_pred, y_pos, e_pos, e_neg, hazard_labels
             )
 
             # --- 5. Back-prop ---
@@ -204,6 +278,9 @@ class GenerativeTrainer:
             totals["e_pos"]  += metrics["e_pos"]
             totals["e_neg"]  += metrics["e_neg"]
             totals["cd_gap"] += metrics["cd_gap"]
+            totals["cop"] += metrics["loss_cop"]
+            if not np.isnan(metrics["e_hazard"]):
+                totals["e_hazard"] += metrics["e_hazard"]
 
         n = len(loader)
         return {k: v / n for k, v in totals.items()}
@@ -214,13 +291,16 @@ class GenerativeTrainer:
         self.model.eval()
 
         totals: Dict[str, float] = {
-            "loss": 0.0, "phys": 0.0, "cd": 0.0,
+            "loss": 0.0, "phys": 0.0, "cd": 0.0, "cop": 0.0,
         }
 
         with torch.no_grad():
-            for x_pos, y_pos in loader:
+            for batch in loader:
+                x_pos, y_pos, hazard_labels = self._unpack_batch(batch)
                 x_pos = x_pos.to(self.device)
                 y_pos = y_pos.to(self.device)
+                if hazard_labels is not None:
+                    hazard_labels = hazard_labels.to(self.device)
 
                 B = x_pos.size(0)
 
@@ -228,15 +308,27 @@ class GenerativeTrainer:
                 e_pos = e_pos_seq.squeeze(-1).mean(dim=1)
 
                 # Validation negatives: fresh noise (no Langevin — too slow)
-                x_neg = torch.randn_like(x_pos)
+                fantasy_count = (
+                    int((hazard_labels < 0.5).sum().item())
+                    if hazard_labels is not None and self.cop_weight > 0
+                    else B
+                )
+                x_neg = torch.randn(
+                    (fantasy_count, *x_pos.shape[1:]),
+                    dtype=x_pos.dtype,
+                    device=x_pos.device,
+                )
                 _, e_neg_seq, _ = self.model(x_neg)
                 e_neg = e_neg_seq.squeeze(-1).mean(dim=1)
 
-                loss, metrics = self.criterion(phys_pred, y_pos, e_pos, e_neg)[:2]
+                loss, metrics = self._joint_loss(
+                    phys_pred, y_pos, e_pos, e_neg, hazard_labels
+                )
 
                 totals["loss"] += metrics["loss_total"]
                 totals["phys"] += metrics["loss_physics"]
                 totals["cd"]   += metrics["loss_cd"]
+                totals["cop"] += metrics["loss_cop"]
 
         n = len(loader)
         return {k: v / n for k, v in totals.items()}
@@ -290,6 +382,9 @@ class GenerativeTrainer:
             self.history["e_pos"].append(tr["e_pos"])
             self.history["e_neg"].append(tr["e_neg"])
             self.history["cd_gap"].append(tr["cd_gap"])
+            self.history["train_cop"].append(tr["cop"])
+            self.history["val_cop"].append(va["cop"])
+            self.history["e_hazard"].append(tr["e_hazard"])
 
             # --- W&B ---
             if self.use_wandb:
@@ -301,9 +396,12 @@ class GenerativeTrainer:
                     "train/e_pos":   tr["e_pos"],
                     "train/e_neg":   tr["e_neg"],
                     "train/cd_gap":  tr["cd_gap"],
+                    "train/cop":     tr["cop"],
+                    "train/e_hazard": tr["e_hazard"],
                     "val/loss":      va["loss"],
                     "val/physics":   va["phys"],
                     "val/cd":        va["cd"],
+                    "val/cop":      va["cop"],
                 })
 
             # --- Console log ---
@@ -312,13 +410,17 @@ class GenerativeTrainer:
                     f"Epoch {epoch+1:4d}/{self.epochs} | "
                     f"Train {tr['loss']:.4f} (phys {tr['phys']:.4f} cd {tr['cd']:.4f}) | "
                     f"Val {va['loss']:.4f} | "
-                    f"E+={tr['e_pos']:.3f} E-={tr['e_neg']:.3f} gap={tr['cd_gap']:.3f}"
+                    f"E+={tr['e_pos']:.3f} E-={tr['e_neg']:.3f} "
+                    f"Eh={tr['e_hazard']:.3f} COP={tr['cop']:.3f} "
+                    f"gap={tr['cd_gap']:.3f}"
                 )
 
             # --- Best model: use physics loss as checkpoint criterion ---
             # (total loss can legitimately go negative due to CD; physics
             #  loss is a stable, unsigned measure of prediction quality)
-            checkpoint_metric = va["phys"]
+            checkpoint_metric = (
+                va["phys"] + self.cop_checkpoint_weight * va["cop"]
+            )
             if checkpoint_metric < self.best_val_loss - self.min_delta:
                 self.best_val_loss = checkpoint_metric
                 self.best_epoch = epoch + 1
@@ -373,7 +475,8 @@ class GenerativeTrainer:
         all_y_true, all_y_pred = [], []
 
         with torch.no_grad():
-            for x_batch, y_batch in test_loader:
+            for batch in test_loader:
+                x_batch, y_batch, _ = self._unpack_batch(batch)
                 x_batch = x_batch.to(self.device)
                 y_batch = y_batch.to(self.device)
 
